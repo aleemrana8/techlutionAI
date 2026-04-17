@@ -1,0 +1,14 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f97316" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+  </defs>
+  <circle cx="100" cy="100" r="90" stroke="url(#grad1)" stroke-width="4" fill="none" />
+  <path d="M60 100 L100 60 L140 100 L100 140 Z" fill="url(#grad1)" opacity="0.9" />
+  <circle cx="100" cy="100" r="10" fill="#22c55e" />
+  <text x="50%" y="180" text-anchor="middle" fill="white" font-size="18" font-family="Arial">
+    Techlution AI
+  </text>
+</svg>

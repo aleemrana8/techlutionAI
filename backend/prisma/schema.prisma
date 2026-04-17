@@ -1,0 +1,318 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  CLIENT
+  STAFF
+}
+
+enum ProjectStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+enum ProjectCategory {
+  HEALTHCARE
+  AI_ML
+  AUTOMATION
+  COMPUTER_VISION
+  DEVOPS_CLOUD
+  DATA_PIPELINES
+  WEB_BACKEND
+  OTHER
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  CLOSED
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum BillingStatus {
+  PENDING
+  SUBMITTED
+  PAID
+  PARTIALLY_PAID
+  DENIED
+  VOIDED
+}
+
+enum DenialStatus {
+  OPEN
+  APPEALED
+  RESOLVED
+  WRITTEN_OFF
+}
+
+enum WorkflowStatus {
+  ACTIVE
+  PAUSED
+  DISABLED
+}
+
+enum WorkflowTrigger {
+  MANUAL
+  WEBHOOK
+  SCHEDULE
+  EVENT
+}
+
+enum AgentType {
+  LLM
+  RPA
+  DATA_PIPELINE
+  NOTIFICATION
+  CUSTOM
+}
+
+// ─── Models ───────────────────────────────────────────────────────────────────
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  password     String
+  name         String
+  role         Role      @default(CLIENT)
+  isActive     Boolean   @default(true)
+  refreshToken String?
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  projects  Project[]
+  agents    Agent[]
+
+  @@map("users")
+}
+
+model Project {
+  id               String          @id @default(cuid())
+  title            String
+  slug             String          @unique
+  shortDescription String
+  fullDescription  String
+  category         ProjectCategory
+  features         String[]
+  workflowSteps    Json[]          // { step: number, title: string, description: string }
+  benefits         String[]
+  images           String[]
+  status           ProjectStatus   @default(DRAFT)
+  tags             String[]
+  techStack        String[]
+  durationWeeks    Int?
+  createdById      String
+  createdBy        User            @relation(fields: [createdById], references: [id])
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  files File[]
+
+  @@map("projects")
+}
+
+model Lead {
+  id        String     @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  company   String?
+  service   String?
+  message   String
+  status    LeadStatus @default(NEW)
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@map("leads")
+}
+
+model Agent {
+  id          String    @id @default(cuid())
+  name        String
+  type        AgentType
+  description String?
+  config      Json      @default("{}")
+  isActive    Boolean   @default(true)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  workflows Workflow[]
+
+  @@map("agents")
+}
+
+// ─── Healthcare Module ────────────────────────────────────────────────────────
+
+model Patient {
+  id                  String   @id @default(cuid())
+  firstName           String
+  lastName            String
+  dateOfBirth         DateTime
+  gender              String
+  phone               String?
+  email               String?
+  address             String?
+  city                String?
+  state               String?
+  zipCode             String?
+  medicalRecordNumber String   @unique
+  insuranceId         String?
+  insuranceProvider   String?
+  groupNumber         String?
+  memberId            String?
+  notes               String?
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  appointments Appointment[]
+  billings     Billing[]
+
+  @@map("patients")
+}
+
+model Appointment {
+  id            String            @id @default(cuid())
+  patientId     String
+  patient       Patient           @relation(fields: [patientId], references: [id])
+  appointmentDate DateTime
+  appointmentTime String
+  type          String
+  provider      String?
+  location      String?
+  status        AppointmentStatus @default(SCHEDULED)
+  reasonForVisit String?
+  notes         String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  billings Billing[]
+
+  @@map("appointments")
+}
+
+model Billing {
+  id              String        @id @default(cuid())
+  patientId       String
+  patient         Patient       @relation(fields: [patientId], references: [id])
+  appointmentId   String?
+  appointment     Appointment?  @relation(fields: [appointmentId], references: [id])
+  dateOfService   DateTime
+  chargeAmount    Float
+  paidAmount      Float         @default(0)
+  adjustmentAmount Float        @default(0)
+  balanceDue      Float
+  status          BillingStatus @default(PENDING)
+  icdCodes        String[]
+  cptCodes        String[]
+  insuranceId     String?
+  claimNumber     String?
+  eobReceived     Boolean       @default(false)
+  eobDate         DateTime?
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  denials Denial[]
+
+  @@map("billings")
+}
+
+model Denial {
+  id          String       @id @default(cuid())
+  billingId   String
+  billing     Billing      @relation(fields: [billingId], references: [id])
+  denialCode  String
+  reason      String
+  denialDate  DateTime
+  status      DenialStatus @default(OPEN)
+  appealNotes String?
+  resolvedAt  DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@map("denials")
+}
+
+// ─── Automation Module ────────────────────────────────────────────────────────
+
+model Workflow {
+  id          String          @id @default(cuid())
+  name        String
+  description String?
+  trigger     WorkflowTrigger @default(MANUAL)
+  steps       Json[]          // { order: number, type: string, config: object }
+  status      WorkflowStatus  @default(ACTIVE)
+  agentId     String?
+  agent       Agent?          @relation(fields: [agentId], references: [id])
+  webhookUrl  String?
+  schedule    String?         // cron expression
+  lastRunAt   DateTime?
+  runCount    Int             @default(0)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  logs WorkflowLog[]
+
+  @@map("workflows")
+}
+
+model WorkflowLog {
+  id         String   @id @default(cuid())
+  workflowId String
+  workflow   Workflow @relation(fields: [workflowId], references: [id])
+  status     String   // SUCCESS | FAILED | RUNNING
+  input      Json?
+  output     Json?
+  error      String?
+  durationMs Int?
+  triggeredBy String?
+  createdAt  DateTime @default(now())
+
+  @@map("workflow_logs")
+}
+
+// ─── File Storage ─────────────────────────────────────────────────────────────
+
+model File {
+  id         String   @id @default(cuid())
+  filename   String
+  originalName String
+  mimeType   String
+  size       Int
+  url        String
+  storagePath String
+  entityType String?  // "project" | "patient" etc.
+  entityId   String?
+  projectId  String?
+  project    Project? @relation(fields: [projectId], references: [id])
+  uploadedAt DateTime @default(now())
+
+  @@map("files")
+}
