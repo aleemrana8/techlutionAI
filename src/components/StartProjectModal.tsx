@@ -143,7 +143,7 @@ export default function StartProjectModal({ isOpen, onClose, onSuccess }: Props)
         >
           {/* Backdrop */}
           <motion.div
-            className="absolute inset-0 bg-black/70 backdrop-blur-md"
+            className="absolute inset-0 bg-black/70 md:backdrop-blur-md"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -152,7 +152,7 @@ export default function StartProjectModal({ isOpen, onClose, onSuccess }: Props)
 
           {/* Modal */}
           <motion.div
-            className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/95 backdrop-blur-xl shadow-2xl shadow-cyan-500/5"
+            className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/[0.98] md:bg-slate-950/95 md:backdrop-blur-xl shadow-2xl shadow-cyan-500/5"
             initial={{ opacity: 0, scale: 0.9, y: 30 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 30 }}
@@ -165,7 +165,7 @@ export default function StartProjectModal({ isOpen, onClose, onSuccess }: Props)
             {/* Close button */}
             <button
               onClick={handleClose}
-              className="absolute top-4 right-4 z-10 w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all"
+              className="absolute top-4 right-4 z-10 w-10 h-10 sm:w-9 sm:h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all"
             >
               <X size={18} />
             </button>
@@ -305,7 +305,7 @@ export default function StartProjectModal({ isOpen, onClose, onSuccess }: Props)
                   <div className="mb-7 pr-8">
                     <div className="flex items-center gap-2 mb-3">
                       <div className="w-8 h-px bg-gradient-to-r from-cyan-500 to-violet-500" />
-                      <span className="text-cyan-400 text-[10px] tracking-[0.28em] uppercase font-semibold">
+                      <span className="text-cyan-400 text-xs sm:text-[10px] tracking-[0.28em] uppercase font-semibold">
                         New Project
                       </span>
                     </div>
@@ -326,7 +326,7 @@ export default function StartProjectModal({ isOpen, onClose, onSuccess }: Props)
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {/* Full Name */}
                       <div>
-                        <label className="block text-[10px] uppercase tracking-[0.15em] text-slate-500 mb-1.5 font-medium">
+                        <label className="block text-xs sm:text-[10px] uppercase tracking-[0.15em] text-slate-500 mb-1.5 font-medium">
                           Full Name <span className="text-red-400">*</span>
                         </label>
                         <div className="relative">
@@ -336,21 +336,21 @@ export default function StartProjectModal({ isOpen, onClose, onSuccess }: Props)
                             value={form.name}
                             onChange={(e) => update('name', e.target.value)}
                             placeholder="Your name"
-                            className="w-full bg-white/[0.03] border border-white/10 text-white rounded-xl pl-10 pr-4 py-3 text-sm placeholder-slate-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 focus:bg-white/[0.05] transition-all"
+                            className="w-full bg-white/[0.03] border border-white/10 text-white rounded-xl pl-10 pr-4 py-3.5 sm:py-3 text-sm placeholder-slate-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 focus:bg-white/[0.05] transition-all"
                           />
                         </div>
                       </div>
 
                       {/* Phone with Country Code */}
                       <div>
-                        <label className="block text-[10px] uppercase tracking-[0.15em] text-slate-500 mb-1.5 font-medium">
+                        <label className="block text-xs sm:text-[10px] uppercase tracking-[0.15em] text-slate-500 mb-1.5 font-medium">
                           Phone Number <span className="text-red-400">*</span>
                         </label>
                         <div className="flex gap-2">
                           <select
                             value={form.countryCode}
                             onChange={(e) => update('countryCode', e.target.value)}
-                            className="w-24 bg-slate-900 border border-white/10 text-slate-300 rounded-xl px-2 py-3 text-sm focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
+                            className="w-[5.5rem] sm:w-24 bg-slate-900 border border-white/10 text-slate-300 rounded-xl px-2 py-3.5 sm:py-3 text-sm focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
                           >
                             {COUNTRY_CODES.map((c) => (
                               <option key={c.code} value={c.code}>
@@ -365,7 +365,7 @@ export default function StartProjectModal({ isOpen, onClose, onSuccess }: Props)
                               value={form.phone}
                               onChange={(e) => update('phone', e.target.value)}
                               placeholder="315 1664843"
-                              className="w-full bg-white/[0.03] border border-white/10 text-white rounded-xl pl-10 pr-4 py-3 text-sm placeholder-slate-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 focus:bg-white/[0.05] transition-all"
+                              className="w-full bg-white/[0.03] border border-white/10 text-white rounded-xl pl-10 pr-4 py-3.5 sm:py-3 text-sm placeholder-slate-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 focus:bg-white/[0.05] transition-all"
                             />
                           </div>
                         </div>
@@ -374,7 +374,7 @@ export default function StartProjectModal({ isOpen, onClose, onSuccess }: Props)
 
                     {/* Row 2: Email */}
                     <div>
-                      <label className="block text-[10px] uppercase tracking-[0.15em] text-slate-500 mb-1.5 font-medium">
+                      <label className="block text-xs sm:text-[10px] uppercase tracking-[0.15em] text-slate-500 mb-1.5 font-medium">
                         Email Address <span className="text-slate-700">(optional)</span>
                       </label>
                       <div className="relative">
@@ -384,14 +384,14 @@ export default function StartProjectModal({ isOpen, onClose, onSuccess }: Props)
                           value={form.email}
                           onChange={(e) => update('email', e.target.value)}
                           placeholder="you@company.com"
-                          className="w-full bg-white/[0.03] border border-white/10 text-white rounded-xl pl-10 pr-4 py-3 text-sm placeholder-slate-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 focus:bg-white/[0.05] transition-all"
+                          className="w-full bg-white/[0.03] border border-white/10 text-white rounded-xl pl-10 pr-4 py-3.5 sm:py-3 text-sm placeholder-slate-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 focus:bg-white/[0.05] transition-all"
                         />
                       </div>
                     </div>
 
                     {/* Row 3: Service */}
                     <div>
-                      <label className="block text-[10px] uppercase tracking-[0.15em] text-slate-500 mb-1.5 font-medium">
+                      <label className="block text-xs sm:text-[10px] uppercase tracking-[0.15em] text-slate-500 mb-1.5 font-medium">
                         Service Needed <span className="text-red-400">*</span>
                       </label>
                       <div className="relative">
@@ -399,7 +399,7 @@ export default function StartProjectModal({ isOpen, onClose, onSuccess }: Props)
                         <select
                           value={form.service}
                           onChange={(e) => update('service', e.target.value)}
-                          className="w-full bg-slate-900 border border-white/10 text-slate-300 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all appearance-none"
+                          className="w-full bg-slate-900 border border-white/10 text-slate-300 rounded-xl pl-10 pr-4 py-3.5 sm:py-3 text-sm focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all appearance-none"
                         >
                           <option value="">Select a service...</option>
                           {SERVICES.map((s) => (
@@ -412,7 +412,7 @@ export default function StartProjectModal({ isOpen, onClose, onSuccess }: Props)
                     {/* Row 4: Budget + Timeline */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-[10px] uppercase tracking-[0.15em] text-slate-500 mb-1.5 font-medium">
+                        <label className="block text-xs sm:text-[10px] uppercase tracking-[0.15em] text-slate-500 mb-1.5 font-medium">
                           Budget Range
                         </label>
                         <div className="relative">
@@ -420,7 +420,7 @@ export default function StartProjectModal({ isOpen, onClose, onSuccess }: Props)
                           <select
                             value={form.budget}
                             onChange={(e) => update('budget', e.target.value)}
-                            className="w-full bg-slate-900 border border-white/10 text-slate-300 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all appearance-none"
+                            className="w-full bg-slate-900 border border-white/10 text-slate-300 rounded-xl pl-10 pr-4 py-3.5 sm:py-3 text-sm focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all appearance-none"
                           >
                             <option value="">Select budget...</option>
                             {BUDGETS.map((b) => (
@@ -431,7 +431,7 @@ export default function StartProjectModal({ isOpen, onClose, onSuccess }: Props)
                       </div>
 
                       <div>
-                        <label className="block text-[10px] uppercase tracking-[0.15em] text-slate-500 mb-1.5 font-medium">
+                        <label className="block text-xs sm:text-[10px] uppercase tracking-[0.15em] text-slate-500 mb-1.5 font-medium">
                           Timeline
                         </label>
                         <div className="relative">
@@ -439,7 +439,7 @@ export default function StartProjectModal({ isOpen, onClose, onSuccess }: Props)
                           <select
                             value={form.timeline}
                             onChange={(e) => update('timeline', e.target.value)}
-                            className="w-full bg-slate-900 border border-white/10 text-slate-300 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all appearance-none"
+                            className="w-full bg-slate-900 border border-white/10 text-slate-300 rounded-xl pl-10 pr-4 py-3.5 sm:py-3 text-sm focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all appearance-none"
                           >
                             <option value="">Select timeline...</option>
                             {TIMELINES.map((t) => (
@@ -452,7 +452,7 @@ export default function StartProjectModal({ isOpen, onClose, onSuccess }: Props)
 
                     {/* Row 5: Message */}
                     <div>
-                      <label className="block text-[10px] uppercase tracking-[0.15em] text-slate-500 mb-1.5 font-medium">
+                      <label className="block text-xs sm:text-[10px] uppercase tracking-[0.15em] text-slate-500 mb-1.5 font-medium">
                         Project Details <span className="text-red-400">*</span>
                       </label>
                       <div className="relative">
@@ -460,16 +460,16 @@ export default function StartProjectModal({ isOpen, onClose, onSuccess }: Props)
                         <textarea
                           value={form.message}
                           onChange={(e) => update('message', e.target.value)}
-                          rows={4}
+                          rows={3}
                           placeholder="Tell us about your project, goals, timeline, and budget..."
-                          className="w-full bg-white/[0.03] border border-white/10 text-white rounded-xl pl-10 pr-4 py-3 text-sm placeholder-slate-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 focus:bg-white/[0.05] transition-all resize-none"
+                          className="w-full bg-white/[0.03] border border-white/10 text-white rounded-xl pl-10 pr-4 py-3.5 sm:py-3 text-sm placeholder-slate-600 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 focus:bg-white/[0.05] transition-all resize-none"
                         />
                       </div>
                     </div>
 
                     {/* Attachments */}
                     <div>
-                      <label className="block text-[10px] uppercase tracking-[0.15em] text-slate-500 mb-1.5 font-medium">
+                      <label className="block text-xs sm:text-[10px] uppercase tracking-[0.15em] text-slate-500 mb-1.5 font-medium">
                         Attachments <span className="text-slate-600">(optional — images, docs, videos)</span>
                       </label>
                       <div
@@ -531,13 +531,13 @@ export default function StartProjectModal({ isOpen, onClose, onSuccess }: Props)
                       disabled={loading}
                       whileHover={{ scale: loading ? 1 : 1.02, y: loading ? 0 : -1 }}
                       whileTap={{ scale: 0.98 }}
-                      className="w-full inline-flex items-center justify-center gap-2.5 bg-gradient-to-r from-cyan-500 via-blue-500 to-violet-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/35 transition-shadow text-sm disabled:opacity-50"
+                      className="w-full inline-flex items-center justify-center gap-2.5 bg-gradient-to-r from-cyan-500 via-blue-500 to-violet-500 text-white font-bold py-4 sm:py-3.5 rounded-xl shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/35 transition-shadow text-sm disabled:opacity-50"
                     >
                       <Send size={15} />
                       {loading ? 'Submitting...' : 'Start Project'}
                     </motion.button>
 
-                    <p className="text-center text-[10px] text-slate-600">
+                    <p className="text-center text-xs sm:text-[10px] text-slate-600">
                       🔒 100% Confidential · ⚡ Guaranteed response within 24 hours
                     </p>
                   </form>

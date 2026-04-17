@@ -419,7 +419,7 @@ export default function Chatbot() {
             <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-cyan-500/5 via-transparent to-violet-500/5 pointer-events-none" />
 
             {/* Glass container */}
-            <div className="relative flex flex-col rounded-2xl bg-slate-950/[0.97] backdrop-blur-2xl border border-white/[0.06] shadow-2xl shadow-black/50 overflow-hidden" style={{ maxHeight: 'min(580px, calc(100vh - 9rem))' }}>
+            <div className="relative flex flex-col rounded-2xl bg-slate-950/[0.98] md:bg-slate-950/[0.97] md:backdrop-blur-2xl border border-white/[0.06] shadow-2xl shadow-black/50 overflow-hidden" style={{ maxHeight: 'min(580px, calc(100vh - 9rem))' }}>
 
               {/* ── Header ── */}
               <div className="relative px-4 py-3.5 border-b border-white/[0.06] bg-gradient-to-r from-slate-900/80 to-slate-950/80 flex-shrink-0">
@@ -472,7 +472,7 @@ export default function Chatbot() {
                       setVoiceEnabled(v => !v)
                       setSpeaking(false)
                     }}
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+                    className={`w-9 h-9 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-all ${
                       voiceEnabled
                         ? 'bg-cyan-500/15 border border-cyan-500/30 text-cyan-400'
                         : 'bg-white/5 border border-white/8 text-slate-500'
@@ -485,7 +485,7 @@ export default function Chatbot() {
                   {/* Close */}
                   <button
                     onClick={() => setOpen(false)}
-                    className="w-8 h-8 rounded-lg bg-white/5 border border-white/8 flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/10 transition-all"
+                    className="w-9 h-9 sm:w-8 sm:h-8 rounded-lg bg-white/5 border border-white/8 flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/10 transition-all"
                   >
                     <X size={14} />
                   </button>
@@ -564,7 +564,7 @@ export default function Chatbot() {
                         whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.97 }}
                         onClick={() => sendMessage(qr.label)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium bg-white/[0.04] border border-white/[0.08] text-slate-400 hover:text-white hover:bg-white/[0.08] hover:border-cyan-500/20 transition-all"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 sm:px-3 sm:py-1.5 rounded-xl text-xs sm:text-[11px] font-medium bg-white/[0.04] border border-white/[0.08] text-slate-400 hover:text-white hover:bg-white/[0.08] hover:border-cyan-500/20 transition-all"
                       >
                         <qr.icon size={12} className="text-cyan-400" />
                         {qr.label}
@@ -609,7 +609,7 @@ export default function Chatbot() {
                       'Ask anything…'
                     }
                     disabled={loading}
-                    className="flex-1 bg-white/[0.04] border border-white/[0.08] text-white text-sm rounded-xl px-3.5 py-2.5 placeholder-slate-600 focus:outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/10 focus:bg-white/[0.06] transition-all disabled:opacity-50"
+                    className="flex-1 bg-white/[0.04] border border-white/[0.08] text-white text-sm rounded-xl px-3.5 py-3 sm:py-2.5 placeholder-slate-600 focus:outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/10 focus:bg-white/[0.06] transition-all disabled:opacity-50"
                   />
 
                   {/* Mic button */}
@@ -617,7 +617,7 @@ export default function Chatbot() {
                     onClick={toggleVoice}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className={`relative w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
+                    className={`relative w-10 h-10 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center transition-all ${
                       listening
                         ? 'bg-red-500/15 border border-red-500/30 text-red-400'
                         : 'bg-white/[0.04] border border-white/[0.08] text-slate-500 hover:text-cyan-400 hover:border-cyan-500/20'
@@ -640,7 +640,7 @@ export default function Chatbot() {
                     disabled={!input.trim() || loading}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-500 flex items-center justify-center text-white shadow-lg shadow-cyan-500/20 disabled:opacity-30 disabled:shadow-none transition-all"
+                    className="w-10 h-10 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-500 flex items-center justify-center text-white shadow-lg shadow-cyan-500/20 disabled:opacity-30 disabled:shadow-none transition-all"
                   >
                     {loading ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
                   </motion.button>

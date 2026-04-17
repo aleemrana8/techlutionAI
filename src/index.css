@@ -344,8 +344,25 @@ a:hover, button:hover, [role="button"]:hover, .cursor-hover:hover {
   }
 }
 
+@keyframes text-reveal-mobile {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .text-reveal {
   animation: text-reveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (max-width: 767px) {
+  .text-reveal {
+    animation: text-reveal-mobile 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
 }
 
 /* ── Smooth button ripple ── */
@@ -399,14 +416,15 @@ a:hover, button:hover, [role="button"]:hover, .cursor-hover:hover {
   box-shadow: 0 0 30px rgba(6,182,212,0.15), 0 0 60px rgba(139,92,246,0.08);
 }
 
-/* ── Reduce animations on mobile ── */
-@media (max-width: 768px) {
+/* ── Reduce animations & blur on mobile for readability ── */
+@media (max-width: 767px) {
   .animate-float,
   .animate-float-slow,
   .animate-float-delayed,
   .animate-blob,
   .animate-blob-delayed,
-  .animate-blob-slow {
+  .animate-blob-slow,
+  .animate-pulse-glow {
     animation: none !important;
   }
 
@@ -414,12 +432,43 @@ a:hover, button:hover, [role="button"]:hover, .cursor-hover:hover {
     transform: none !important;
   }
 
-  /* Simpler transitions on mobile for 60fps */
+  /* Remove glass blur on mobile — use solid background instead */
   .glass {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(15, 23, 42, 0.85) !important;
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .wk-card {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(15, 23, 42, 0.88) !important;
+    transform-style: flat !important;
+    perspective: none !important;
   }
 
   .wk-card:hover {
     transform: translateY(-3px);
+  }
+
+  /* Kill heavy CSS animations on mobile for scroll performance */
+  .ticker { animation-duration: 90s; }
+  .ticker-rev { animation-duration: 90s; }
+
+  /* Better mobile button touch targets (minimum 44px) */
+  .btn-primary {
+    @apply py-3.5 px-5 text-sm;
+    min-height: 44px;
+  }
+
+  .btn-outline {
+    @apply py-3.5 px-5 text-sm;
+    min-height: 44px;
+  }
+
+  /* Smaller grid for mobile */
+  .site-grid {
+    background-size: 60px 60px;
   }
 }

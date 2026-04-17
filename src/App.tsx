@@ -1,5 +1,5 @@
 import { motion, useScroll, useSpring } from 'framer-motion'
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import AppRoutes from './routes/AppRoutes'
 import { useSmoothScroll } from './hooks/useSmoothScroll'
 
@@ -11,6 +11,15 @@ const ThreeBackground = lazy(() => import('./components/animations/ThreeBackgrou
 function App() {
   /* ── Lenis smooth scroll ── */
   useSmoothScroll()
+
+  /* ── Mobile detection ── */
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   /* ── Scroll progress bar ── */
   const { scrollYProgress } = useScroll()
@@ -49,10 +58,10 @@ function App() {
         <motion.div
           className="absolute rounded-full pointer-events-none"
           style={{
-            width: 700, height: 700, top: '-8%', left: '-5%',
-            background: 'radial-gradient(circle, rgba(59,130,246,0.14) 0%, transparent 70%)',
+            width: isMobile ? 350 : 700, height: isMobile ? 350 : 700, top: '-8%', left: '-5%',
+            background: `radial-gradient(circle, rgba(59,130,246,${isMobile ? 0.08 : 0.14}) 0%, transparent 70%)`,
           }}
-          animate={{ scale: [1, 1.18, 1], x: [0, 45, 0], y: [0, -30, 0] }}
+          animate={isMobile ? {} : { scale: [1, 1.18, 1], x: [0, 45, 0], y: [0, -30, 0] }}
           transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
         />
 
@@ -60,10 +69,10 @@ function App() {
         <motion.div
           className="absolute rounded-full pointer-events-none"
           style={{
-            width: 600, height: 600, top: '25%', right: '-8%',
-            background: 'radial-gradient(circle, rgba(139,92,246,0.11) 0%, transparent 70%)',
+            width: isMobile ? 300 : 600, height: isMobile ? 300 : 600, top: '25%', right: '-8%',
+            background: `radial-gradient(circle, rgba(139,92,246,${isMobile ? 0.06 : 0.11}) 0%, transparent 70%)`,
           }}
-          animate={{ scale: [1, 1.22, 1], x: [0, -35, 0], y: [0, 40, 0] }}
+          animate={isMobile ? {} : { scale: [1, 1.22, 1], x: [0, -35, 0], y: [0, 40, 0] }}
           transition={{ duration: 25, repeat: Infinity, ease: 'easeInOut', delay: 4 }}
         />
 
@@ -71,10 +80,10 @@ function App() {
         <motion.div
           className="absolute rounded-full pointer-events-none"
           style={{
-            width: 800, height: 800, bottom: '-10%', left: '20%',
-            background: 'radial-gradient(circle, rgba(249,115,22,0.08) 0%, transparent 70%)',
+            width: isMobile ? 400 : 800, height: isMobile ? 400 : 800, bottom: '-10%', left: '20%',
+            background: `radial-gradient(circle, rgba(249,115,22,${isMobile ? 0.04 : 0.08}) 0%, transparent 70%)`,
           }}
-          animate={{ scale: [1, 1.12, 1], x: [0, 25, 0], y: [0, -25, 0] }}
+          animate={isMobile ? {} : { scale: [1, 1.12, 1], x: [0, 25, 0], y: [0, -25, 0] }}
           transition={{ duration: 30, repeat: Infinity, ease: 'easeInOut', delay: 8 }}
         />
 
@@ -82,10 +91,10 @@ function App() {
         <motion.div
           className="absolute rounded-full pointer-events-none"
           style={{
-            width: 400, height: 400, top: '55%', left: '45%',
-            background: 'radial-gradient(circle, rgba(34,211,238,0.07) 0%, transparent 70%)',
+            width: isMobile ? 200 : 400, height: isMobile ? 200 : 400, top: '55%', left: '45%',
+            background: `radial-gradient(circle, rgba(34,211,238,${isMobile ? 0.04 : 0.07}) 0%, transparent 70%)`,
           }}
-          animate={{ scale: [1, 1.3, 1], x: [0, -20, 0], y: [0, -40, 0] }}
+          animate={isMobile ? {} : { scale: [1, 1.3, 1], x: [0, -20, 0], y: [0, -40, 0] }}
           transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
         />
       </div>
@@ -93,7 +102,10 @@ function App() {
       {/* ── Global readability overlay ── */}
       <div
         className="fixed inset-0 -z-10 pointer-events-none"
-        style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.42) 50%, rgba(0,0,0,0.68) 100%)' }}
+        style={{ background: isMobile
+          ? 'linear-gradient(180deg, rgba(0,0,0,0.50) 0%, rgba(0,0,0,0.30) 50%, rgba(0,0,0,0.52) 100%)'
+          : 'linear-gradient(180deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.42) 50%, rgba(0,0,0,0.68) 100%)'
+        }}
       />
 
       {/* ── Site content with routing ── */}

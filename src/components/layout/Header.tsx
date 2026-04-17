@@ -37,7 +37,7 @@ export default function Header({ onStartProject }: { onStartProject?: () => void
       transition={{ duration: 0.5, ease: 'easeOut' }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
-          ? 'bg-slate-950/95 backdrop-blur-xl border-b border-white/5 shadow-xl shadow-black/20'
+          ? 'bg-slate-950/95 md:backdrop-blur-xl backdrop-blur-sm border-b border-white/5 shadow-xl shadow-black/20'
           : 'bg-transparent'
       }`}
     >
@@ -82,9 +82,9 @@ export default function Header({ onStartProject }: { onStartProject?: () => void
         {/* Mobile Menu Toggle */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="md:hidden p-2 text-white rounded-lg hover:bg-white/10 transition-colors"
+          className="md:hidden p-2.5 text-white rounded-lg hover:bg-white/10 transition-colors"
         >
-          {isOpen ? <X size={22} /> : <Menu size={22} />}
+          {isOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
@@ -95,14 +95,14 @@ export default function Header({ onStartProject }: { onStartProject?: () => void
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden overflow-hidden bg-slate-950/98 backdrop-blur-xl border-b border-white/10"
+            className="md:hidden overflow-hidden bg-slate-950/98 backdrop-blur-sm border-b border-white/10"
           >
             <div className="px-4 py-4 space-y-1">
               {navigation.map((item) => (
                 <a
                   key={item.name}
                   href={item.href}
-                  className="block px-4 py-3 text-sm font-medium text-slate-300 hover:text-orange-400 hover:bg-white/5 rounded-lg transition-all"
+                  className="block px-4 py-3.5 text-base font-medium text-slate-300 hover:text-orange-400 hover:bg-white/5 rounded-lg transition-all"
                   onClick={() => setIsOpen(false)}
                 >
                   {item.name}

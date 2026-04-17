@@ -28,7 +28,7 @@ export default function Toast({ show, onClose, title = 'Message Sent!', message 
           transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           className="fixed top-6 left-1/2 z-[200] w-[90vw] max-w-md"
         >
-          <div className="relative rounded-2xl border border-emerald-500/20 bg-slate-950/95 backdrop-blur-xl shadow-2xl shadow-emerald-500/10 overflow-hidden">
+          <div className="relative rounded-2xl border border-emerald-500/20 bg-slate-950/[0.98] md:bg-slate-950/95 md:backdrop-blur-xl shadow-2xl shadow-emerald-500/10 overflow-hidden">
             {/* Top accent */}
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-500/60 to-transparent" />
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-12 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />

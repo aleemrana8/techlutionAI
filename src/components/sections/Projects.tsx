@@ -9,6 +9,8 @@ import {
 import { submitContact } from '../../api/api'
 import Toast from '../common/Toast'
 
+const projIsMobile = typeof window !== 'undefined' && window.innerWidth < 768
+
 /* ── Categories ───────────────────────────────────────────────── */
 
 const categories = ['All', 'Healthcare', 'AI Agents', 'Automation', 'Web Apps', 'AI & ML']
@@ -532,13 +534,13 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
 
         {/* ── Section Header ── */}
         <motion.div
-          initial={{ opacity: 0, y: 24, filter: 'blur(6px)' }}
-          whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+          initial={{ opacity: 0, y: 24, ...(projIsMobile ? {} : { filter: 'blur(6px)' }) }}
+          whileInView={{ opacity: 1, y: 0, ...(projIsMobile ? {} : { filter: 'blur(0px)' }) }}
           viewport={{ once: true, margin: '-60px' }}
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-16"
         >
-          <span className="inline-flex items-center gap-3 text-cyan-400 text-[11px] tracking-[0.28em] uppercase font-semibold mb-4">
+          <span className="inline-flex items-center gap-3 text-cyan-400 text-xs sm:text-[11px] tracking-[0.28em] uppercase font-semibold mb-4">
             <div className="w-8 h-px bg-gradient-to-r from-cyan-500 to-violet-500" />
             Portfolio
             <div className="w-8 h-px bg-gradient-to-r from-violet-500 to-cyan-500" />
@@ -590,8 +592,8 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
               return (
                 <motion.div
                   key={project.number}
-                  initial={{ opacity: 0, y: 30, filter: 'blur(4px)' }}
-                  whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                  initial={{ opacity: 0, y: 30, ...(projIsMobile ? {} : { filter: 'blur(4px)' }) }}
+                  whileInView={{ opacity: 1, y: 0, ...(projIsMobile ? {} : { filter: 'blur(0px)' }) }}
                   viewport={{ once: true, margin: '-40px' }}
                   transition={{ duration: 0.55, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
                   whileHover={{ y: -8, scale: 1.02, boxShadow: `0 20px 40px rgba(0,0,0,0.3), 0 0 25px ${project.glowColor}`, transition: { type: 'spring', stiffness: 300, damping: 20 } }}
@@ -599,7 +601,7 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
                     setSelectedProject(projects.indexOf(project))
                     setActiveTab('overview')
                   }}
-                  className={`group relative rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm overflow-hidden cursor-pointer transition-all duration-300 ${project.borderAccent}`}
+                  className={`group relative rounded-2xl border border-white/[0.06] bg-white/[0.02] md:backdrop-blur-sm overflow-hidden cursor-pointer transition-all duration-300 ${project.borderAccent}`}
                 >
                   {/* Top glow */}
                   <div
@@ -627,13 +629,13 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
                     </div>
                     {/* Badge */}
                     <div className="absolute top-3 right-3">
-                      <span className={`text-[10px] ${project.accent} uppercase tracking-[0.18em] font-semibold px-2.5 py-1 rounded-md ${project.accentBg} backdrop-blur-md border border-white/10 shadow-lg`}>
+                      <span className={`text-xs sm:text-[10px] ${project.accent} uppercase tracking-[0.18em] font-semibold px-2.5 py-1 rounded-md ${project.accentBg} md:backdrop-blur-md border border-white/10 shadow-lg`}>
                         {project.badge}
                       </span>
                     </div>
                     {/* Number */}
                     <div className="absolute top-3 left-3">
-                      <span className="text-xs text-white/40 font-mono font-bold bg-black/30 backdrop-blur-sm px-2 py-0.5 rounded">{project.number}</span>
+                      <span className="text-xs text-white/40 font-mono font-bold bg-black/30 md:backdrop-blur-sm px-2 py-0.5 rounded">{project.number}</span>
                     </div>
                   </div>
 
@@ -672,7 +674,7 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
                         return (
                           <div key={j} className="flex items-center gap-2 p-2 rounded-lg border border-white/[0.04] bg-white/[0.01]">
                             <BIcon size={12} className={project.accent} />
-                            <span className="text-[11px] text-slate-400 font-medium truncate">{b.title}</span>
+                            <span className="text-xs sm:text-[11px] text-slate-400 font-medium truncate">{b.title}</span>
                           </div>
                         )
                       })}
@@ -683,7 +685,7 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
                       <div className={`flex items-center gap-2 text-sm font-semibold ${project.accent} group-hover:gap-3 transition-all`}>
                         Explore Project <ArrowRight size={14} />
                       </div>
-                      <div className="flex items-center gap-1 text-[10px] text-slate-600">
+                      <div className="flex items-center gap-1 text-xs sm:text-[10px] text-slate-600">
                         <Layers size={10} />
                         {project.features.length} Features
                       </div>
@@ -714,7 +716,7 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.25 }}
-                className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-6 bg-black/80 backdrop-blur-sm overflow-y-auto"
+                className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-6 bg-black/80 md:backdrop-blur-sm overflow-y-auto"
                 onClick={() => setSelectedProject(null)}
               >
                 <motion.div
@@ -722,7 +724,7 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.92, y: 30 }}
                   transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                  className="relative max-w-5xl w-full rounded-2xl border border-white/10 bg-slate-950/98 backdrop-blur-xl shadow-2xl overflow-hidden my-6"
+                  className="relative max-w-5xl w-full rounded-2xl border border-white/10 bg-slate-950/[0.98] md:bg-slate-950/98 md:backdrop-blur-xl shadow-2xl overflow-hidden my-6"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {/* ── Hero Image ── */}
@@ -747,7 +749,7 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
                     {/* Close button */}
                     <button
                       onClick={() => setSelectedProject(null)}
-                      className="absolute top-4 right-4 w-9 h-9 rounded-full border border-white/20 bg-black/40 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/10 transition-all z-10"
+                      className="absolute top-4 right-4 w-9 h-9 rounded-full border border-white/20 bg-black/40 md:backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/10 transition-all z-10"
                     >
                       <X size={16} />
                     </button>
@@ -756,7 +758,7 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
                     <div className="absolute bottom-6 left-6 right-6">
                       <div className="flex items-center gap-3 mb-3">
                         <motion.div
-                          className={`w-14 h-14 rounded-xl ${p.accentBg} border border-white/10 backdrop-blur-sm flex items-center justify-center`}
+                          className={`w-14 h-14 rounded-xl ${p.accentBg} border border-white/10 md:backdrop-blur-sm flex items-center justify-center`}
                           initial={{ rotate: -10, scale: 0.8 }}
                           animate={{ rotate: 0, scale: 1 }}
                           transition={{ type: 'spring', stiffness: 200, delay: 0.1 }}
@@ -765,8 +767,8 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
                         </motion.div>
                         <div>
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-[10px] text-white/50 font-mono">{p.number}</span>
-                            <span className={`text-[10px] ${p.accent} uppercase tracking-[0.18em] font-semibold px-2.5 py-0.5 rounded-md ${p.accentBg} backdrop-blur-sm`}>
+                            <span className="text-xs sm:text-[10px] text-white/50 font-mono">{p.number}</span>
+                            <span className={`text-xs sm:text-[10px] ${p.accent} uppercase tracking-[0.18em] font-semibold px-2.5 py-0.5 rounded-md ${p.accentBg} md:backdrop-blur-sm`}>
                               {p.badge}
                             </span>
                           </div>
@@ -786,10 +788,10 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
                           initial={{ opacity: 0, y: 12 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.2 + j * 0.06, duration: 0.3 }}
-                          className="text-center p-4 rounded-xl border border-white/[0.08] bg-slate-900/80 backdrop-blur-sm"
+                          className="text-center p-4 rounded-xl border border-white/[0.08] bg-slate-900/80 md:backdrop-blur-sm"
                         >
                           <div className={`text-xl font-black ${p.accent}`}>{r.value}</div>
-                          <div className="text-[10px] text-slate-500 font-medium mt-1">{r.label}</div>
+                          <div className="text-xs sm:text-[10px] text-slate-500 font-medium mt-1">{r.label}</div>
                         </motion.div>
                       ))}
                     </div>
@@ -1011,14 +1013,14 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
                                   transition={{ delay: j * 0.12, duration: 0.35 }}
                                   className="relative p-4 rounded-xl border border-white/[0.06] bg-white/[0.02] text-center"
                                 >
-                                  <div className="absolute -top-2 -left-1 text-[10px] font-mono text-slate-600 bg-slate-950 px-1.5 rounded">
+                                  <div className="absolute -top-2 -left-1 text-xs sm:text-[10px] font-mono text-slate-600 bg-slate-950 px-1.5 rounded">
                                     {String(j + 1).padStart(2, '0')}
                                   </div>
                                   <div className={`w-11 h-11 mx-auto rounded-lg bg-gradient-to-br ${step.color} flex items-center justify-center mb-3 shadow-lg`}>
                                     <SIcon size={18} className="text-white" />
                                   </div>
                                   <div className="text-white text-xs font-semibold mb-2">{step.title}</div>
-                                  <p className="text-slate-500 text-[11px] leading-relaxed">
+                                  <p className="text-slate-500 text-xs sm:text-[11px] leading-relaxed">
                                     {p.process[j]}
                                   </p>
                                   {j < 4 && (
@@ -1216,7 +1218,7 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
                               <Send size={14} />
                               {formLoading ? 'Sending...' : 'Send Inquiry'}
                             </motion.button>
-                            <p className="text-[10px] text-slate-600 text-center mt-2">⚡ Guaranteed response within 24 hours · 100% confidential</p>
+                            <p className="text-xs sm:text-[10px] text-slate-600 text-center mt-2">⚡ Guaranteed response within 24 hours · 100% confidential</p>
                           </div>
                         )}
                       </motion.div>
@@ -1278,7 +1280,7 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
                       <Icon size={18} className="text-orange-400" />
                     </div>
                     <div>
-                      <div className="text-[11px] uppercase tracking-widest text-slate-500 mb-0.5">{info.label}</div>
+                      <div className="text-xs sm:text-[11px] uppercase tracking-widest text-slate-500 mb-0.5">{info.label}</div>
                       <div className="text-white font-semibold group-hover:text-orange-400 transition-colors">{info.value}</div>
                     </div>
                   </motion.a>
@@ -1365,7 +1367,7 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-[11px] uppercase tracking-widest text-slate-500 mb-2">Full Name <span className="text-red-400">*</span></label>
+                  <label className="block text-xs sm:text-[11px] uppercase tracking-widest text-slate-500 mb-2">Full Name <span className="text-red-400">*</span></label>
                   <input
                     type="text"
                     value={contactForm.name}
@@ -1376,7 +1378,7 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] uppercase tracking-widest text-slate-500 mb-2">Phone Number <span className="text-red-400">*</span></label>
+                  <label className="block text-xs sm:text-[11px] uppercase tracking-widest text-slate-500 mb-2">Phone Number <span className="text-red-400">*</span></label>
                   <div className="flex gap-2">
                     <select
                       value={contactForm.countryCode}
@@ -1407,7 +1409,7 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
               </div>
 
               <div>
-                <label className="block text-[11px] uppercase tracking-widest text-slate-500 mb-2">Email Address <span className="text-red-400">*</span></label>
+                <label className="block text-xs sm:text-[11px] uppercase tracking-widest text-slate-500 mb-2">Email Address <span className="text-red-400">*</span></label>
                 <input
                   type="email"
                   value={contactForm.email}
@@ -1419,7 +1421,7 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
               </div>
 
               <div>
-                <label className="block text-[11px] uppercase tracking-widest text-slate-500 mb-2">Service Needed <span className="text-red-400">*</span></label>
+                <label className="block text-xs sm:text-[11px] uppercase tracking-widest text-slate-500 mb-2">Service Needed <span className="text-red-400">*</span></label>
                 <select
                   value={contactForm.service}
                   onChange={(e) => setContactForm(f => ({ ...f, service: e.target.value }))}
@@ -1438,7 +1440,7 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
               </div>
 
               <div>
-                <label className="block text-[11px] uppercase tracking-widest text-slate-500 mb-2">Project Details <span className="text-red-400">*</span></label>
+                <label className="block text-xs sm:text-[11px] uppercase tracking-widest text-slate-500 mb-2">Project Details <span className="text-red-400">*</span></label>
                 <textarea
                   value={contactForm.message}
                   onChange={(e) => setContactForm(f => ({ ...f, message: e.target.value }))}
@@ -1461,7 +1463,7 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
                 {contactSent ? 'Message Sent Successfully!' : contactLoading ? 'Sending...' : (<>Contact Us <Send size={16} /></>)}
               </motion.button>
 
-              <p className="text-center text-[11px] text-slate-600">
+              <p className="text-center text-xs sm:text-[11px] text-slate-600">
                 🔒 100% Confidential · ⚡ Reply Within 24 Hours · 🚀 100+ Projects Delivered
               </p>
             </form>

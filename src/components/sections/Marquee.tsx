@@ -30,11 +30,11 @@ export default function MarqueeTicker() {
   const doubled = [...items, ...items]
 
   return (
-    <div className="py-4 bg-slate-950/80 border-y border-white/5 overflow-hidden select-none backdrop-blur-sm">
+    <div className="py-4 bg-slate-950/80 border-y border-white/5 overflow-hidden select-none md:backdrop-blur-sm">
       <div className="ticker flex">
         {doubled.map((item, i) => (
           <div key={i} className="flex items-center flex-shrink-0">
-            <span className="text-slate-600 text-[11px] font-semibold uppercase tracking-[0.22em] whitespace-nowrap px-7">
+            <span className="text-slate-600 text-xs sm:text-[11px] font-semibold uppercase tracking-[0.22em] whitespace-nowrap px-7">
               {item}
             </span>
             <span className="text-orange-500/40 text-sm flex-shrink-0">·</span>

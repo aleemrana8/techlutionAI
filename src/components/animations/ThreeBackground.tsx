@@ -5,6 +5,9 @@ function ThreeBackground() {
   var canvasRef = useRef(null as HTMLCanvasElement | null)
 
   useEffect(function () {
+    // Skip heavy canvas animation on mobile for scroll performance
+    if (window.innerWidth < 768) return
+
     var canvas = canvasRef.current
     if (!canvas) return
     var c = canvas.getContext('2d')

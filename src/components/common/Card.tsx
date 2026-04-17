@@ -21,7 +21,7 @@ export default function Card({
         transition: { type: 'spring', stiffness: 300, damping: 20 },
       } : {}}
       transition={{ duration: 0.3 }}
-      className={`glass p-6 md:p-8 rounded-2xl h-full transition-all duration-300 ${className}`}
+      className={`glass p-4 sm:p-6 md:p-8 rounded-2xl h-full transition-all duration-300 ${className}`}
     >
       {children}
     </motion.div>

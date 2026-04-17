@@ -51,7 +51,7 @@ export default function Contact() {
     <section id="contact" className="bg-slate-950/90 overflow-hidden">
 
       {/* ── Large CTA block ── */}
-      <div className="py-24 md:py-36 px-4 md:px-8 border-b border-white/5">
+      <div className="py-16 sm:py-24 md:py-36 px-4 md:px-8 border-b border-white/5">
         <div className="max-w-7xl mx-auto">
 
           {/* Label */}
@@ -63,7 +63,7 @@ export default function Contact() {
             className="flex items-center gap-3 mb-10"
           >
             <div className="w-8 h-px bg-orange-500" />
-            <span className="text-orange-400 text-[11px] tracking-[0.28em] uppercase font-semibold">
+            <span className="text-orange-400 text-xs sm:text-[11px] tracking-[0.28em] uppercase font-semibold">
               Start a project
             </span>
           </motion.div>
@@ -162,7 +162,7 @@ export default function Contact() {
                       <Icon size={18} className="text-orange-400" />
                     </div>
                     <div>
-                      <div className="text-[11px] uppercase tracking-widest text-slate-500 mb-0.5">
+                      <div className="text-xs sm:text-[11px] uppercase tracking-widest text-slate-500 mb-0.5">
                         {info.label}
                       </div>
                       <div className="text-white font-semibold group-hover:text-orange-400 transition-colors">
@@ -182,14 +182,14 @@ export default function Contact() {
               transition={{ delay: 0.4, duration: 0.5 }}
               className="p-6 rounded-2xl bg-slate-900 border border-white/5"
             >
-              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-2">
+              <div className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-2">
                 Pakistan — HQ
               </div>
               <div className="text-white font-bold">Rana Muhammad Aleem Akhtar</div>
               <div className="text-slate-400 text-sm mt-1">
                 <a href="https://www.google.com/maps/search/Hostel+City+Park+Road+Islamabad" target="_blank" rel="noopener noreferrer" className="hover:text-orange-400 transition-colors">Hostel Park Road, Islamabad</a>
               </div>
-              <div className="text-[11px] text-slate-600 mt-3">
+              <div className="text-xs sm:text-[11px] text-slate-600 mt-3">
                 Quick response · Usually within 24 h
               </div>
             </motion.div>
@@ -205,7 +205,7 @@ export default function Contact() {
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-[11px] uppercase tracking-widest text-slate-500 mb-2">
+                  <label className="block text-xs sm:text-[11px] uppercase tracking-widest text-slate-500 mb-2">
                     Full Name
                   </label>
                   <input
@@ -215,11 +215,11 @@ export default function Contact() {
                     onChange={handleChange}
                     required
                     placeholder="John Smith"
-                    className="w-full bg-slate-900 border border-white/8 text-white rounded-xl px-4 py-3.5 text-sm placeholder-slate-600 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/15 transition-all"
+                    className="w-full bg-slate-900 border border-white/8 text-white rounded-xl px-4 py-4 sm:py-3.5 text-sm placeholder-slate-600 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/15 transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] uppercase tracking-widest text-slate-500 mb-2">
+                  <label className="block text-xs sm:text-[11px] uppercase tracking-widest text-slate-500 mb-2">
                     Email Address
                   </label>
                   <input
@@ -229,20 +229,20 @@ export default function Contact() {
                     onChange={handleChange}
                     required
                     placeholder="john@company.com"
-                    className="w-full bg-slate-900 border border-white/8 text-white rounded-xl px-4 py-3.5 text-sm placeholder-slate-600 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/15 transition-all"
+                    className="w-full bg-slate-900 border border-white/8 text-white rounded-xl px-4 py-4 sm:py-3.5 text-sm placeholder-slate-600 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/15 transition-all"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[11px] uppercase tracking-widest text-slate-500 mb-2">
+                <label className="block text-xs sm:text-[11px] uppercase tracking-widest text-slate-500 mb-2">
                   Service Needed
                 </label>
                 <select
                   name="service"
                   value={formData.service}
                   onChange={handleChange}
-                  className="w-full bg-slate-900 border border-white/8 text-slate-300 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/15 transition-all"
+                  className="w-full bg-slate-900 border border-white/8 text-slate-300 rounded-xl px-4 py-4 sm:py-3.5 text-sm focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/15 transition-all"
                 >
                   <option value="">Select a service...</option>
                   <option value="ai-ml">AI &amp; Machine Learning</option>
@@ -255,7 +255,7 @@ export default function Contact() {
               </div>
 
               <div>
-                <label className="block text-[11px] uppercase tracking-widest text-slate-500 mb-2">
+                <label className="block text-xs sm:text-[11px] uppercase tracking-widest text-slate-500 mb-2">
                   Project Details
                 </label>
                 <textarea
@@ -263,9 +263,9 @@ export default function Contact() {
                   value={formData.message}
                   onChange={handleChange}
                   required
-                  rows={5}
+                  rows={4}
                   placeholder="Tell us about your project, goals, and timeline..."
-                  className="w-full bg-slate-900 border border-white/8 text-white rounded-xl px-4 py-3.5 text-sm placeholder-slate-600 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/15 transition-all resize-none"
+                  className="w-full bg-slate-900 border border-white/8 text-white rounded-xl px-4 py-4 sm:py-3.5 text-sm placeholder-slate-600 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/15 transition-all resize-none"
                 />
               </div>
 
@@ -280,7 +280,7 @@ export default function Contact() {
                 )}
               </motion.button>
 
-              <p className="text-center text-[11px] text-slate-600">
+              <p className="text-center text-xs sm:text-[11px] text-slate-600">
                 🔒 100% Confidential · ⚡ Reply Within 24 Hours · 🚀 100+ Projects Delivered
               </p>
             </form>

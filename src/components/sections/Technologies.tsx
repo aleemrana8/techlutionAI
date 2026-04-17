@@ -2,6 +2,8 @@
 import { Brain, Eye, Zap, Heart, Cloud, Database } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
+const techIsMobile = typeof window !== 'undefined' && window.innerWidth < 768
+
 // â”€â”€â”€ Per-category animated background components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function NeuralBg() {
@@ -274,13 +276,13 @@ export default function Technologies() {
 
         {/* Section header */}
         <motion.div
-          initial={{ opacity: 0, y: 24, filter: 'blur(6px)' }}
-          whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+          initial={{ opacity: 0, y: 24, ...(techIsMobile ? {} : { filter: 'blur(6px)' }) }}
+          whileInView={{ opacity: 1, y: 0, ...(techIsMobile ? {} : { filter: 'blur(0px)' }) }}
           viewport={{ once: true, margin: '-60px' }}
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           className="mb-12"
         >
-          <span className="flex items-center gap-3 text-orange-400 text-[11px] tracking-[0.28em] uppercase font-semibold mb-4">
+          <span className="flex items-center gap-3 text-orange-400 text-xs sm:text-[11px] tracking-[0.28em] uppercase font-semibold mb-4">
             <div className="w-8 h-px bg-orange-500" />
             Tech Stack
           </span>
@@ -308,12 +310,12 @@ export default function Technologies() {
             return (
               <motion.div
                 key={cat.id}
-                initial={{ opacity: 0, y: 32, filter: 'blur(4px)' }}
-                whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                initial={{ opacity: 0, y: 32, ...(techIsMobile ? {} : { filter: 'blur(4px)' }) }}
+                whileInView={{ opacity: 1, y: 0, ...(techIsMobile ? {} : { filter: 'blur(0px)' }) }}
                 viewport={{ once: true, margin: '-40px' }}
                 transition={{ duration: 0.55, delay: i * 0.09, ease: [0.22, 1, 0.36, 1] }}
                 whileHover={{ y: -8, scale: 1.02, boxShadow: `0 20px 40px rgba(0,0,0,0.3), 0 0 40px ${cat.glow}`, transition: { type: 'spring', stiffness: 300, damping: 20 } }}
-                className={`relative overflow-hidden rounded-2xl border ${cat.border} bg-gradient-to-br ${cat.gradient} backdrop-blur-md group cursor-default`}
+                className={`relative overflow-hidden rounded-2xl border ${cat.border} bg-gradient-to-br ${cat.gradient} md:backdrop-blur-md group cursor-default`}
                 style={{ boxShadow: `0 0 40px 0 ${cat.glow}` }}
               >
                 {/* â”€â”€ Animated illustration â”€â”€ */}
@@ -344,7 +346,7 @@ export default function Technologies() {
                       {doubled.map((t, j) => (
                         <span
                           key={j}
-                          className="flex-shrink-0 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold whitespace-nowrap border border-white/8"
+                          className="flex-shrink-0 px-2.5 py-1.5 rounded-lg text-xs sm:text-[11px] font-semibold whitespace-nowrap border border-white/8"
                           style={{ color: t.color, background: t.bg }}
                         >
                           {t.name}

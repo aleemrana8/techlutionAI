@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Brain, Eye, Zap, Heart, Cloud, Database, CheckCircle2, ArrowRight, X, Globe, Smartphone, ShieldCheck, Headphones, Code2, BarChart3, Box, GraduationCap, ShoppingCart, Megaphone, Fingerprint, Rocket, TrendingUp, Users, Timer, Shield, Target, Gauge, Star, MessageCircle } from 'lucide-react'
 
+const svcIsMobile = typeof window !== 'undefined' && window.innerWidth < 768
+
 interface ServiceItem {
   number: string; title: string; category: string; icon: typeof Brain
   accent: string; accentBg: string; borderAccent: string; glowColor: string
@@ -417,13 +419,13 @@ export default function Services({ onStartProject, onContactUs }: { onStartProje
 
         {/* Section header */}
         <motion.div
-          initial={{ opacity: 0, y: 30, filter: 'blur(6px)' }}
-          whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+          initial={{ opacity: 0, y: 30, ...(svcIsMobile ? {} : { filter: 'blur(6px)' }) }}
+          whileInView={{ opacity: 1, y: 0, ...(svcIsMobile ? {} : { filter: 'blur(0px)' }) }}
           viewport={{ once: true, margin: '-60px' }}
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           className="text-center mb-16"
         >
-          <span className="inline-flex items-center gap-3 text-cyan-400 text-[11px] tracking-[0.28em] uppercase font-semibold mb-4">
+          <span className="inline-flex items-center gap-3 text-cyan-400 text-xs sm:text-[11px] tracking-[0.28em] uppercase font-semibold mb-4">
             <div className="w-8 h-px bg-gradient-to-r from-cyan-500 to-violet-500" />
             Our Expertise
             <div className="w-8 h-px bg-gradient-to-r from-violet-500 to-cyan-500" />
@@ -455,12 +457,12 @@ export default function Services({ onStartProject, onContactUs }: { onStartProje
             return (
               <motion.div
                 key={svc.number}
-                initial={{ opacity: 0, y: 30, filter: 'blur(4px)' }}
-                whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                initial={{ opacity: 0, y: 30, ...(svcIsMobile ? {} : { filter: 'blur(4px)' }) }}
+                whileInView={{ opacity: 1, y: 0, ...(svcIsMobile ? {} : { filter: 'blur(0px)' }) }}
                 viewport={{ once: true, margin: '-40px' }}
                 transition={{ duration: 0.55, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
                 whileHover={{ y: -8, scale: 1.02, boxShadow: `0 20px 40px rgba(0,0,0,0.3), 0 0 30px ${svc.glowColor}`, transition: { type: 'spring', stiffness: 300, damping: 20 } }}
-                className={`group relative rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm overflow-hidden cursor-pointer transition-all duration-300 ${svc.borderAccent}`}
+                className={`group relative rounded-2xl border border-white/[0.06] bg-white/[0.02] md:backdrop-blur-sm overflow-hidden cursor-pointer transition-all duration-300 ${svc.borderAccent}`}
                 onClick={() => setExpandedIdx(isExpanded ? null : i)}
               >
                 {/* Top glow on hover */}
@@ -482,7 +484,7 @@ export default function Services({ onStartProject, onContactUs }: { onStartProje
                     >
                       <Icon size={22} className={svc.accent} />
                     </motion.div>
-                    <span className="text-[10px] text-slate-600 font-mono tracking-wider mt-1">
+                    <span className="text-xs sm:text-[10px] text-slate-600 font-mono tracking-wider mt-1">
                       {svc.number}
                     </span>
                   </div>
@@ -493,7 +495,7 @@ export default function Services({ onStartProject, onContactUs }: { onStartProje
                   </h3>
 
                   {/* Category badge */}
-                  <span className={`inline-block text-[10px] ${svc.accent} uppercase tracking-[0.18em] font-semibold mb-4 px-2.5 py-1 rounded-md ${svc.accentBg}`}>
+                  <span className={`inline-block text-xs sm:text-[10px] ${svc.accent} uppercase tracking-[0.18em] font-semibold mb-4 px-2.5 py-1 rounded-md ${svc.accentBg}`}>
                     {svc.category}
                   </span>
 
@@ -519,7 +521,7 @@ export default function Services({ onStartProject, onContactUs }: { onStartProje
                         {hi === 0 && <TrendingUp size={10} className={svc.accent} />}
                         {hi === 1 && <Gauge size={10} className={svc.accent} />}
                         {hi === 2 && <Star size={10} className={svc.accent} />}
-                        <span className="text-[10px] text-slate-400 font-semibold">{h}</span>
+                        <span className="text-xs sm:text-[10px] text-slate-400 font-semibold">{h}</span>
                         {hi < 2 && <div className="w-px h-3 bg-white/10 ml-1.5" />}
                       </div>
                     ))}
@@ -551,7 +553,7 @@ export default function Services({ onStartProject, onContactUs }: { onStartProje
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.25 }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 md:backdrop-blur-sm"
               onClick={() => setExpandedIdx(null)}
             >
               <motion.div
@@ -559,7 +561,7 @@ export default function Services({ onStartProject, onContactUs }: { onStartProje
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.92, y: 20 }}
                 transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                className="relative max-w-2xl w-full rounded-2xl border border-white/10 bg-slate-950/95 backdrop-blur-xl shadow-2xl overflow-hidden"
+                className="relative max-w-2xl w-full rounded-2xl border border-white/10 bg-slate-950/[0.98] md:bg-slate-950/95 md:backdrop-blur-xl shadow-2xl overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Top glow */}
@@ -585,13 +587,13 @@ export default function Services({ onStartProject, onContactUs }: { onStartProje
                       {(() => { const Icon = services[expandedIdx].icon; return <Icon size={26} className={services[expandedIdx].accent} /> })()}
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-600 font-mono tracking-wider">{services[expandedIdx].number}</span>
+                      <span className="text-xs sm:text-[10px] text-slate-600 font-mono tracking-wider">{services[expandedIdx].number}</span>
                       <h3 className="font-bold text-2xl text-white">{services[expandedIdx].title}</h3>
                     </div>
                   </div>
 
                   {/* Category */}
-                  <span className={`inline-block text-[10px] ${services[expandedIdx].accent} uppercase tracking-[0.18em] font-semibold mb-5 px-3 py-1 rounded-md ${services[expandedIdx].accentBg}`}>
+                  <span className={`inline-block text-xs sm:text-[10px] ${services[expandedIdx].accent} uppercase tracking-[0.18em] font-semibold mb-5 px-3 py-1 rounded-md ${services[expandedIdx].accentBg}`}>
                     {services[expandedIdx].category}
                   </span>
 
@@ -632,7 +634,7 @@ export default function Services({ onStartProject, onContactUs }: { onStartProje
                         className="text-center p-3 rounded-xl border border-white/[0.06] bg-white/[0.02]"
                       >
                         <div className={`text-lg font-black ${stat.color}`}>{stat.value}</div>
-                        <div className="text-[10px] text-slate-500 font-medium mt-0.5">{stat.label}</div>
+                        <div className="text-xs sm:text-[10px] text-slate-500 font-medium mt-0.5">{stat.label}</div>
                       </motion.div>
                     ))}
                   </div>

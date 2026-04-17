@@ -2,6 +2,8 @@ import { useEffect, useState, useRef } from 'react'
 import { motion, AnimatePresence, useMotionValue, useTransform, useScroll, useSpring } from 'framer-motion'
 import { ArrowRight, Bot, Sparkles, Cloud, Cpu, Zap, Shield, BarChart3, Brain, Workflow, Globe, Database, Code2, Cog, Network, Layers, Terminal, GitBranch, Radar, MessageCircle, Rocket } from 'lucide-react'
 
+const heroIsMobile = typeof window !== 'undefined' && window.innerWidth < 768
+
 /* ── Data ─────────────────────────────────────────────────────── */
 
 const CYCLING_WORDS = ['Businesses', 'Enterprises', 'Industries', 'Companies', 'Operations']
@@ -59,7 +61,7 @@ function AISphere() {
 
   return (
     <motion.div
-      className="relative w-80 h-80 md:w-[440px] md:h-[440px]"
+      className="relative w-64 h-64 sm:w-80 sm:h-80 md:w-[440px] md:h-[440px]"
       style={{ rotateX, rotateY, perspective: 800 }}
       onMouseMove={(e) => {
         const rect = (e.target as HTMLElement).getBoundingClientRect()
@@ -114,7 +116,7 @@ function AISphere() {
       />
 
       {/* Core glow layers */}
-      <div className="absolute inset-[18%] rounded-full bg-gradient-to-br from-cyan-500/15 via-violet-500/10 to-blue-500/10 backdrop-blur-sm" />
+      <div className="absolute inset-[18%] rounded-full bg-gradient-to-br from-cyan-500/15 via-violet-500/10 to-blue-500/10 md:backdrop-blur-sm" />
       <div className="absolute inset-[22%] rounded-full bg-gradient-to-br from-cyan-500/10 via-transparent to-violet-500/10" />
 
       {/* Center orb with intense pulse */}
@@ -174,7 +176,7 @@ function AISphere() {
       {orbitIcons.map(({ Icon, radius, speed, delay, color, glow }, i) => (
         <motion.div
           key={`orbit-${i}`}
-          className={`absolute w-8 h-8 rounded-lg bg-slate-900/90 border border-white/10 backdrop-blur-md flex items-center justify-center shadow-lg ${glow}`}
+          className={`absolute w-8 h-8 rounded-lg bg-slate-900/90 border border-white/10 md:backdrop-blur-md flex items-center justify-center shadow-lg ${glow}`}
           style={{ top: '50%', left: '50%', marginTop: -16, marginLeft: -16 }}
           animate={{
             x: [
@@ -211,7 +213,7 @@ function AISphere() {
           }}
         >
           <motion.div
-            className={`flex items-center gap-2 px-3 py-2 rounded-xl ${bg} border ${border} backdrop-blur-md shadow-lg ${glow}`}
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl ${bg} border ${border} md:backdrop-blur-md shadow-lg ${glow}`}
             whileHover={{ scale: 1.15, y: -4 }}
             transition={{ duration: 0.2 }}
           >
@@ -292,7 +294,7 @@ function StatsDashboard() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.8 + i * 0.12, duration: 0.5 }}
             whileHover={{ y: -4, transition: { duration: 0.25 } }}
-            className="relative group p-4 rounded-xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm overflow-hidden"
+            className="relative group p-4 rounded-xl border border-white/[0.06] bg-white/[0.02] md:backdrop-blur-sm overflow-hidden"
           >
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
               style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(6,182,212,0.06), transparent 70%)' }}
@@ -421,7 +423,7 @@ export default function Hero({ onStartProject, onContactUs }: { onStartProject?:
               className="flex items-center gap-3 mb-8"
             >
               <div className="w-10 h-px bg-gradient-to-r from-cyan-500 to-violet-500" />
-              <span className="text-cyan-400 text-[11px] tracking-[0.28em] uppercase font-semibold">
+              <span className="text-cyan-400 text-xs sm:text-[11px] tracking-[0.28em] uppercase font-semibold">
                 Innovate · Automate · Elevate
               </span>
             </motion.div>
@@ -476,7 +478,7 @@ export default function Hero({ onStartProject, onContactUs }: { onStartProject?:
                 whileHover={{ scale: 1.06, y: -3, boxShadow: '0 0 30px rgba(6,182,212,0.4), 0 0 60px rgba(139,92,246,0.2)' }}
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-violet-500 text-white font-semibold px-7 py-3.5 rounded-xl shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-shadow text-sm relative overflow-hidden group"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-violet-500 text-white font-semibold px-6 sm:px-7 py-4 sm:py-3.5 rounded-xl shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-shadow text-sm relative overflow-hidden group"
               >
                 <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
                 Get Started <ArrowRight size={16} />
@@ -487,7 +489,7 @@ export default function Hero({ onStartProject, onContactUs }: { onStartProject?:
                 whileHover={{ scale: 1.06, y: -3, borderColor: 'rgba(255,255,255,0.5)' }}
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-                className="inline-flex items-center gap-2 border border-white/20 text-white font-semibold px-7 py-3.5 rounded-xl hover:bg-white/5 hover:border-white/35 transition-all text-sm"
+                className="inline-flex items-center gap-2 border border-white/20 text-white font-semibold px-6 sm:px-7 py-4 sm:py-3.5 rounded-xl hover:bg-white/5 hover:border-white/35 transition-all text-sm"
               >
                 View Projects
               </motion.a>
@@ -520,18 +522,18 @@ export default function Hero({ onStartProject, onContactUs }: { onStartProject?:
             return (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 18, filter: 'blur(4px)' }}
-                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                initial={{ opacity: 0, y: 18, ...(heroIsMobile ? {} : { filter: 'blur(4px)' }) }}
+                animate={{ opacity: 1, y: 0, ...(heroIsMobile ? {} : { filter: 'blur(0px)' }) }}
                 transition={{ delay: 1.1 + i * 0.12, duration: 0.55 }}
                 whileHover={{ y: -6, scale: 1.02, boxShadow: '0 12px 30px rgba(0,0,0,0.3)', transition: { duration: 0.25, type: 'spring', stiffness: 300 } }}
-                className="group flex items-start gap-4 p-5 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 hover:bg-white/[0.04] transition-all cursor-default"
+                className="group flex items-start gap-4 p-4 sm:p-5 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 hover:bg-white/[0.04] transition-all cursor-default"
               >
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/15 to-violet-500/15 border border-white/8 flex items-center justify-center flex-shrink-0 group-hover:from-cyan-500/25 group-hover:to-violet-500/25 transition-all">
                   <Icon size={18} className="text-cyan-400" />
                 </div>
                 <div>
                   <h4 className="text-white font-bold text-sm mb-1">{f.title}</h4>
-                  <p className="text-slate-500 text-xs leading-relaxed">{f.desc}</p>
+                  <p className="text-slate-500 text-xs sm:text-[13px] leading-relaxed">{f.desc}</p>
                 </div>
               </motion.div>
             )
