@@ -15,7 +15,7 @@ export async function submitContact(input: {
   attachments?: Express.Multer.File[]
 }) {
   const { attachments: files, ...leadData } = input
-  const lead = await contactRepo.createLead(leadData)
+  const lead = await contactRepo.createLead({ ...leadData, type: 'INQUIRY' })
   const emailAttachments = (files || []).map(f => ({ filename: f.originalname, path: f.path }))
 
   // Admin notification (fire-and-forget)
@@ -54,11 +54,10 @@ export async function submitProjectRequest(input: {
     email: rest.email || '',
     phone: rest.phone,
     service: rest.service,
-    message: [
-      rest.message,
-      budget ? `\n\nBudget: ${budget}` : '',
-      timeline ? `\nTimeline: ${timeline}` : '',
-    ].join(''),
+    message: rest.message,
+    type: 'PROPOSAL',
+    budget: budget || null,
+    timeline: timeline || null,
     ipAddress: rest.ipAddress,
     userAgent: rest.userAgent,
   })

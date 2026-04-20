@@ -58,6 +58,9 @@ model Lead {
   company   String?
   service   String?
   message   String
+  type      LeadType   @default(INQUIRY)
+  budget    String?
+  timeline  String?
   status    LeadStatus @default(NEW)
   ipAddress String?
   userAgent String?
@@ -356,6 +359,11 @@ enum ProjectCategory {
   DATA_PIPELINES
   WEB_BACKEND
   OTHER
+}
+
+enum LeadType {
+  INQUIRY
+  PROPOSAL
 }
 
 enum LeadStatus {

@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { Search, Eye, Check, MessageSquare, Mail, Phone } from 'lucide-react'
+import { Search, Eye, Check, MessageSquare, Mail, Phone, FileText, Rocket, DollarSign, Clock } from 'lucide-react'
 import { getLeads } from '../../api/adminApi'
 import { useDashboardSocket } from '../hooks/useSocket'
 
 type LeadStatus = 'New' | 'Contacted' | 'Qualified' | 'Converted' | 'Closed'
+type LeadTypeFilter = 'All' | 'INQUIRY' | 'PROPOSAL'
 
 const STATUS_COLORS: Record<LeadStatus, string> = {
   New: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
@@ -19,6 +20,7 @@ const ALL_STATUSES: LeadStatus[] = ['New', 'Contacted', 'Qualified', 'Converted'
 export default function Leads() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<LeadStatus | 'All'>('All')
+  const [typeFilter, setTypeFilter] = useState<LeadTypeFilter>('All')
   const [expandedId, setExpandedId] = useState<number | null>(null)
   const [leads, setLeads] = useState<any[]>([])
 
@@ -40,7 +42,8 @@ export default function Leads() {
       (l.service || l.subject || '').toLowerCase().includes(search.toLowerCase()) ||
       (l.message || '').toLowerCase().includes(search.toLowerCase())
     const matchStatus = statusFilter === 'All' || (l.status || 'New') === statusFilter
-    return matchSearch && matchStatus
+    const matchType = typeFilter === 'All' || (l.type || 'INQUIRY') === typeFilter
+    return matchSearch && matchStatus && matchType
   })
 
   return (
@@ -51,18 +54,23 @@ export default function Leads() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        {ALL_STATUSES.map(s => (
-          <motion.div
-            key={s}
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="rounded-xl bg-slate-900/60 backdrop-blur-sm border border-white/[0.06] p-3 text-center"
-          >
-            <p className="text-lg font-bold text-white">{leads.filter((l: any) => (l.status || 'New') === s).length}</p>
-            <p className="text-[11px] text-slate-500">{s}</p>
-          </motion.div>
-        ))}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="rounded-xl bg-slate-900/60 backdrop-blur-sm border border-white/[0.06] p-3 text-center">
+          <p className="text-lg font-bold text-white">{leads.length}</p>
+          <p className="text-[11px] text-slate-500">Total</p>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="rounded-xl bg-slate-900/60 backdrop-blur-sm border border-cyan-500/10 p-3 text-center">
+          <p className="text-lg font-bold text-cyan-400">{leads.filter((l: any) => (l.type || 'INQUIRY') === 'INQUIRY').length}</p>
+          <p className="text-[11px] text-slate-500">Inquiries</p>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="rounded-xl bg-slate-900/60 backdrop-blur-sm border border-violet-500/10 p-3 text-center">
+          <p className="text-lg font-bold text-violet-400">{leads.filter((l: any) => l.type === 'PROPOSAL').length}</p>
+          <p className="text-[11px] text-slate-500">Proposals</p>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="rounded-xl bg-slate-900/60 backdrop-blur-sm border border-emerald-500/10 p-3 text-center">
+          <p className="text-lg font-bold text-emerald-400">{leads.filter((l: any) => (l.status || 'New') === 'New').length}</p>
+          <p className="text-[11px] text-slate-500">New</p>
+        </motion.div>
       </div>
 
       {/* Filters */}
@@ -77,6 +85,24 @@ export default function Leads() {
           />
         </div>
         <div className="flex flex-wrap gap-2">
+          {(['All', 'INQUIRY', 'PROPOSAL'] as const).map(t => (
+            <button
+              key={t}
+              onClick={() => setTypeFilter(t)}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all flex items-center gap-1.5 ${
+                typeFilter === t
+                  ? t === 'INQUIRY' ? 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30'
+                    : t === 'PROPOSAL' ? 'bg-violet-500/15 text-violet-400 border-violet-500/30'
+                    : 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30'
+                  : 'bg-white/[0.03] text-slate-400 border-white/[0.06] hover:bg-white/[0.06]'
+              }`}
+            >
+              {t === 'INQUIRY' && <FileText size={11} />}
+              {t === 'PROPOSAL' && <Rocket size={11} />}
+              {t === 'All' ? 'All Types' : t === 'INQUIRY' ? 'Inquiries' : 'Proposals'}
+            </button>
+          ))}
+          <div className="w-px bg-white/[0.06] mx-1" />
           {(['All', ...ALL_STATUSES] as const).map(s => (
             <button
               key={s}
@@ -103,7 +129,7 @@ export default function Leads() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/[0.06]">
-                {['Client', 'Service', 'Source', 'Status', 'Timestamp', 'Actions'].map(h => (
+                {['Client', 'Service', 'Type', 'Status', 'Timestamp', 'Actions'].map(h => (
                   <th key={h} className="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider px-4 py-3">{h}</th>
                 ))}
               </tr>
@@ -132,9 +158,15 @@ export default function Leads() {
                     </td>
                     <td className="px-4 py-3 text-slate-300 text-xs">{lead.service || lead.subject || '-'}</td>
                     <td className="px-4 py-3">
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-white/[0.05] border border-white/[0.06] text-slate-400">
-                        {lead.source || 'Website'}
-                      </span>
+                      {(lead.type || 'INQUIRY') === 'PROPOSAL' ? (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 flex items-center gap-1 w-fit">
+                          <Rocket size={10} /> Proposal
+                        </span>
+                      ) : (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center gap-1 w-fit">
+                          <FileText size={10} /> Inquiry
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <span className={`text-xs px-2.5 py-0.5 rounded-full border ${STATUS_COLORS[(lead.status || 'New') as LeadStatus] || STATUS_COLORS.New}`}>
@@ -165,8 +197,15 @@ export default function Leads() {
                         >
                           <div className="flex items-center gap-4 text-xs text-slate-400">
                             <span className="flex items-center gap-1"><Mail size={12} /> {lead.email}</span>
-                            <span className="flex items-center gap-1"><Phone size={12} /> {lead.phone}</span>
+                            {lead.phone && <span className="flex items-center gap-1"><Phone size={12} /> {lead.phone}</span>}
+                            {lead.company && <span className="flex items-center gap-1">🏢 {lead.company}</span>}
                           </div>
+                          {(lead.type === 'PROPOSAL') && (
+                            <div className="flex items-center gap-4 text-xs">
+                              {lead.budget && <span className="flex items-center gap-1 text-emerald-400"><DollarSign size={12} /> Budget: {lead.budget}</span>}
+                              {lead.timeline && <span className="flex items-center gap-1 text-amber-400"><Clock size={12} /> Timeline: {lead.timeline}</span>}
+                            </div>
+                          )}
                           <div className="flex items-start gap-1.5">
                             <MessageSquare size={12} className="text-slate-500 mt-0.5 flex-shrink-0" />
                             <p className="text-sm text-slate-300">{lead.message}</p>
