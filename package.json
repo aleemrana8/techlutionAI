@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "prisma generate && (prisma migrate deploy || true) && cd backend && npx tsc && cd .. && vite build",
+    "build": "prisma generate && npx tsc -p backend/tsconfig.json && vite build",
     "preview": "vite preview",
     "postinstall": "prisma generate || true"
   },
