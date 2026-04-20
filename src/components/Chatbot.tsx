@@ -66,7 +66,7 @@ export default function Chatbot() {
     {
       id: uid(),
       role: 'bot',
-      text: "Hey there! 👋 I'm **Techlution Bot** — your smart AI assistant!\n\n🚀 At **Techlution AI**, we make your work:\n✅ **EASY** — automate repetitive tasks\n⚡ **FAST** — AI processes in seconds\n🧠 **SMART** — data-driven decisions\n💰 **PROFITABLE** — cut costs 40-80%\n\nAsk me anything — AI, tech, healthcare, or your next big idea!",
+      text: "Welcome to Techlution AI 👋\n\nWe make your work **easier**, **faster**, and **smarter** using AI — helping you boost efficiency and profit.\n\nHow can I help you today?",
     },
   ])
   const [input, setInput] = useState('')

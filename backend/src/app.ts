@@ -195,17 +195,24 @@ app.post('/api/chat', async (req, res) => {
   const enhancedPrompt = buildFinalPrompt({ message, intent, context, history, language })
 
   if (process.env.GEMINI_API_KEY) {
-    const geminiModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.0-flash-lite']
+    const geminiModels = ['gemini-2.0-flash', 'gemini-2.0-flash-lite']
     const { GoogleGenerativeAI } = await import('@google/generative-ai')
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY.trim())
     for (const modelName of geminiModels) {
       try {
-        const model = genAI.getGenerativeModel({ model: modelName, systemInstruction: systemPrompt, generationConfig: { temperature: 0.8, topP: 0.92, topK: 40, maxOutputTokens: 800 } })
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          systemInstruction: systemPrompt,
+          generationConfig: { temperature: 0.7, topP: 0.9, topK: 40, maxOutputTokens: 1024 },
+        })
         const result = await model.generateContent(enhancedPrompt)
         const reply = result.response.text()
-        if (reply) { addMemory(sid, message, reply); res.json({ success: true, data: { reply, intent, language } }); return }
-      } catch (err: any) { logger.warn(`Gemini ${modelName} unavailable:`, err?.message?.substring(0, 120) || err) }
+        if (reply && reply.trim().length > 5) { addMemory(sid, message, reply); res.json({ success: true, data: { reply, intent, language } }); return }
+        logger.warn(`Gemini ${modelName}: empty response`)
+      } catch (err: any) { logger.warn(`Gemini ${modelName} error:`, err?.message?.substring(0, 200) || err) }
     }
+  } else {
+    logger.warn('GEMINI_API_KEY not set — skipping Gemini')
   }
 
   if (process.env.OPENAI_API_KEY) {
@@ -251,19 +258,23 @@ app.get('/api/chat-stream', async (req, res) => {
   let fullReply = ''
 
   if (process.env.GEMINI_API_KEY) {
-    const geminiModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.0-flash-lite']
+    const geminiModels = ['gemini-2.0-flash', 'gemini-2.0-flash-lite']
     const { GoogleGenerativeAI } = await import('@google/generative-ai')
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY.trim())
     for (const modelName of geminiModels) {
       try {
-        const model = genAI.getGenerativeModel({ model: modelName, systemInstruction: systemPrompt, generationConfig: { temperature: 0.8, topP: 0.92, topK: 40, maxOutputTokens: 800 } })
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          systemInstruction: systemPrompt,
+          generationConfig: { temperature: 0.7, topP: 0.9, topK: 40, maxOutputTokens: 1024 },
+        })
         const result = await model.generateContentStream(enhancedPrompt)
         for await (const chunk of result.stream) {
           const text = chunk.text()
           if (text) { fullReply += text; res.write('data: ' + JSON.stringify({ type: 'chunk', text }) + '\n\n') }
         }
         if (fullReply) { addMemory(sid, message, fullReply); res.write('data: [DONE]\n\n'); res.end(); return }
-      } catch (err: any) { logger.warn(`Gemini stream ${modelName} error:`, err?.message?.substring(0, 120) || err) }
+      } catch (err: any) { logger.warn(`Gemini stream ${modelName} error:`, err?.message?.substring(0, 200) || err) }
     }
   }
 
