@@ -71,7 +71,7 @@ export async function initEmbeddings(): Promise<void> {
   }
   try {
     const genAI = new GoogleGenerativeAI(apiKey)
-    const model = genAI.getGenerativeModel({ model: 'embedding-001' as any })
+    const model = genAI.getGenerativeModel({ model: 'text-embedding-004' as any })
     const texts = buildChunkTexts()
     for (let i = 0; i < texts.length; i++) {
       const result = await model.embedContent(texts[i])
@@ -104,7 +104,7 @@ export async function vectorSearch(query: string, topK = 3): Promise<string> {
   }
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
-    const model = genAI.getGenerativeModel({ model: 'embedding-001' as any })
+    const model = genAI.getGenerativeModel({ model: 'text-embedding-004' as any })
     const result = await model.embedContent(query)
     const qEmb = result.embedding.values
     const scored = chunks
@@ -197,7 +197,7 @@ export function buildFinalPrompt(opts: {
   if (opts.context) parts.push('Relevant Context:\n' + opts.context)
   parts.push('User Intent: ' + opts.intent)
   parts.push('User Question: ' + opts.message)
-  parts.push('Give a helpful, complete, and human-like answer:')
+  parts.push('IMPORTANT: First answer the user\'s actual question with real, accurate information. Then optionally connect to Techlution AI if relevant. Do NOT skip the answer to only talk about the company.')
   return parts.join('\n\n')
 }
 
@@ -274,7 +274,7 @@ export function getSmartFallback(message: string): string {
   if (/\b(hello|hi|hey|assalam|salam|good morning|good evening|howdy)\b/.test(msg))
     return 'Hello! Welcome to Techlution AI. I am your AI-powered assistant and I am here to help with anything you need. Whether you have questions about AI, technology, our services, or want to discuss a project idea, ask me anything! I think like a consultant, not a salesperson.'
 
-  if (/\b(service|what do you do|what do you offer|what can you|capabilit)\b/.test(msg))
+  if (/\b(services?|what do you do|what do you offer|what can you|capabilit|offer)\b/.test(msg))
     return 'Great question! Techlution AI offers 6 core services:\n\n* **AI & Machine Learning** - Custom models, LLMs, RAG systems, AI agents\n* **Computer Vision** - OCR, object detection, medical imaging\n* **Automation & Integration** - n8n workflows, API integrations, webhooks\n* **Healthcare AI** - EHR, PMS, RCM, medical billing, denial management\n* **DevOps & Cloud** - Azure, Docker, Terraform, CI/CD\n* **Data Pipelines** - Web scraping, ETL, structured extraction\n\nWhich area interests you most?'
 
   if (/\b(healthcare|hospital|ehr|emr|medical|rcm|billing|coding|denial|claim|hipaa|patient)\b/.test(msg))
@@ -307,8 +307,13 @@ export function getSmartFallback(message: string): string {
   if (/\b(thank|thanks|bye|goodbye|see you|take care)\b/.test(msg))
     return 'You are welcome! If you ever need help, I am always here.\n\nEmail: raleem811811@gmail.com | Phone: +92 315 1664843\n\nInnovate - Automate - Elevate — **Techlution AI**!'
 
-  if (/\b(about|who are you|tell me about|company|techlution)\b/.test(msg))
-    return KNOWLEDGE.company.name + ' builds intelligent systems using AI, automation, and scalable technologies. Founded by ' + KNOWLEDGE.contact.name + ', based in Islamabad, Pakistan.\n\nWe help businesses optimize operations and grow through cutting-edge technology. How can we help you today?'
+  // Company-specific questions (only match if directly asking about techlution/company)
+  if (/\b(who are you|tell me about techlution|about techlution|your company|about your|tell me about you)\b/.test(msg))
+    return KNOWLEDGE.company.name + ' builds intelligent systems using AI, automation, and scalable technologies. Founded by ' + KNOWLEDGE.contact.name + ', based in Islamabad, Pakistan.\n\nWe offer 6 core services: AI & ML, Computer Vision, Automation, Healthcare AI, DevOps & Cloud, and Data Pipelines. How can we help you today?'
 
-  return 'Thanks for reaching out! I am your AI assistant at Techlution AI. I can help with:\n\n• **Our 6 core services** — AI/ML, Computer Vision, Automation, Healthcare AI, DevOps & Cloud, Data Pipelines\n• **Technical questions** — AI, automation, cloud, security\n• **Project discussions** — Guidance for your ideas\n• **Pricing** — Free consultation for any project\n\nWhat would you like to know?'
+  // General questions — acknowledge we cannot answer general knowledge without AI
+  if (msg.split(/\s+/).length > 2)
+    return 'That is an interesting question! I am currently best equipped to help with topics related to **Techlution AI** — our services, projects, pricing, and technical consultations.\n\nFor this specific question, I would recommend reaching out to our team who can give you a detailed response:\n\n**Email**: raleem811811@gmail.com | **Phone**: +92 315 1664843\n\nOr ask me about our AI & ML, Healthcare IT, Automation, DevOps, or Data Pipeline services!'
+
+  return 'I am your AI assistant at Techlution AI. I can help with:\n\n• **Our 6 core services** — AI/ML, Computer Vision, Automation, Healthcare AI, DevOps & Cloud, Data Pipelines\n• **Technical questions** — AI, automation, cloud, security\n• **Project discussions** — Guidance for your ideas\n• **Pricing** — Free consultation for any project\n\nWhat would you like to know?'
 }

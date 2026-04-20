@@ -213,7 +213,7 @@ app.post('/api/chat', async (req, res) => {
         return
       }
     } catch (err: any) {
-      logger.warn('Gemini unavailable:', err.message ?? err)
+      logger.warn('Gemini unavailable:', err?.message || err?.toString() || JSON.stringify(err))
     }
   }
 
