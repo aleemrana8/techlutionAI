@@ -2,28 +2,17 @@
 // not handled by specific api/*.ts functions (chat.ts, contact.ts, etc.)
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-
-let app: any = null
-
-async function getApp() {
-  if (!app) {
-    const mod = await import('../backend/src/app')
-    app = mod.default || mod.app || mod
-  }
-  return app
-}
+import app from '../backend/src/app'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
-    const expressApp = await getApp()
-    return expressApp(req, res)
+    return app(req, res)
   } catch (err: any) {
     console.error('Serverless function error:', err)
     res.status(500).json({
       success: false,
       message: 'Internal server error',
       error: process.env.NODE_ENV !== 'production' ? err.message : undefined,
-      stack: process.env.NODE_ENV !== 'production' ? err.stack?.split('\n').slice(0, 5) : undefined,
     })
   }
 }
