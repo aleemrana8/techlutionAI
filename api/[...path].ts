@@ -2,17 +2,37 @@
 // not handled by specific api/*.ts functions (chat.ts, contact.ts, etc.)
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import app from '../backend/src/app'
+import { createRequire } from 'module'
+
+const require = createRequire(import.meta.url)
+
+let app: any = null
+
+function getApp() {
+  if (!app) {
+    try {
+      // Import pre-compiled backend (built by tsc during Vercel build step)
+      const mod = require('../backend/dist/app')
+      app = mod.default || mod
+    } catch (err: any) {
+      console.error('Failed to load Express app:', err.message)
+      throw err
+    }
+  }
+  return app
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
-    return app(req, res)
+    const expressApp = getApp()
+    return expressApp(req, res)
   } catch (err: any) {
     console.error('Serverless function error:', err)
     res.status(500).json({
       success: false,
       message: 'Internal server error',
-      error: process.env.NODE_ENV !== 'production' ? err.message : undefined,
+      error: err.message,
+      stack: err.stack?.split('\n').slice(0, 5),
     })
   }
 }

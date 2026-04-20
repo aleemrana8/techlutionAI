@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "prisma generate && vite build",
+    "build": "prisma generate && cd backend && npx tsc && cd .. && vite build",
     "preview": "vite preview",
     "postinstall": "prisma generate || true"
   },
