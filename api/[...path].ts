@@ -8,12 +8,22 @@ let app: any = null
 async function getApp() {
   if (!app) {
     const mod = await import('../backend/src/app')
-    app = mod.default || mod
+    app = mod.default || mod.app || mod
   }
   return app
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const expressApp = await getApp()
-  return expressApp(req, res)
+  try {
+    const expressApp = await getApp()
+    return expressApp(req, res)
+  } catch (err: any) {
+    console.error('Serverless function error:', err)
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: process.env.NODE_ENV !== 'production' ? err.message : undefined,
+      stack: process.env.NODE_ENV !== 'production' ? err.stack?.split('\n').slice(0, 5) : undefined,
+    })
+  }
 }
