@@ -1,12 +1,17 @@
 {
-  "buildCommand": "vite build",
+  "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
+  "functions": {
+    "api/[...path].ts": {
+      "maxDuration": 30
+    }
+  },
   "rewrites": [
-    { "source": "/api/admin/(.*)", "destination": "https://techlution-api.onrender.com/api/admin/$1" },
-    { "source": "/api/visitor", "destination": "https://techlution-api.onrender.com/api/visitor" },
-    { "source": "/api/chat-stream", "destination": "https://techlution-api.onrender.com/api/chat-stream" },
-    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/api/chat", "destination": "/api/chat" },
+    { "source": "/api/contact", "destination": "/api/contact" },
+    { "source": "/api/contact/project", "destination": "/api/contact/project" },
+    { "source": "/api/(.*)", "destination": "/api/[...path]" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
