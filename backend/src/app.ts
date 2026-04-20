@@ -1,6 +1,7 @@
 import dotenv from 'dotenv'
 import path from 'path'
-dotenv.config({ path: path.resolve(__dirname, '../.env') })
+// Load .env from backend/ for local dev, Vercel uses env vars directly
+try { dotenv.config({ path: path.resolve(__dirname, '../.env') }) } catch {}
 dotenv.config()
 
 import express from 'express'

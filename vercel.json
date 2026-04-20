@@ -4,11 +4,13 @@
   "framework": "vite",
   "functions": {
     "api/[...path].ts": {
-      "maxDuration": 30
+      "maxDuration": 30,
+      "includeFiles": "backend/**"
     }
   },
   "rewrites": [
     { "source": "/api/chat", "destination": "/api/chat" },
+    { "source": "/api/chat-stream", "destination": "/api/[...path]" },
     { "source": "/api/contact", "destination": "/api/contact" },
     { "source": "/api/contact/project", "destination": "/api/contact/project" },
     { "source": "/api/(.*)", "destination": "/api/[...path]" },
