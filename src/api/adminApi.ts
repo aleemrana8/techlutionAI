@@ -24,6 +24,7 @@ AdminAPI.interceptors.response.use(
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 export const getDashboard = () => AdminAPI.get('/dashboard')
+export const getDashboardTrends = () => AdminAPI.get('/dashboard/trends')
 
 // ─── Visitors ─────────────────────────────────────────────────────────────────
 export const getVisitors = (params?: Record<string, string>) => AdminAPI.get('/visitors', { params })

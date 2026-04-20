@@ -12,7 +12,7 @@ const NAV_ITEMS = [
   { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true, permission: 'dashboard' as const },
   { to: '/admin/visitors', icon: Users, label: 'Visitors', permission: 'visitors' as const },
   { to: '/admin/clients', icon: UserCheck, label: 'Clients', permission: 'clients' as const },
-  { to: '/admin/leads', icon: MessageSquare, label: 'Leads', permission: 'leads' as const },
+  { to: '/admin/leads', icon: MessageSquare, label: 'Inquiries', permission: 'leads' as const },
   { to: '/admin/hr', icon: Briefcase, label: 'HR', permission: 'employees' as const },
   { to: '/admin/finance', icon: DollarSign, label: 'Finance', permission: 'finance' as const },
   { to: '/admin/projects', icon: FolderKanban, label: 'Projects', permission: 'projects' as const },

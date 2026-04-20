@@ -20,6 +20,7 @@ router.use(requireAdmin)
 // ─── Dashboard Summary ────────────────────────────────────────────────────────
 router.get('/dashboard', adminUserCtrl.dashboardSummary)
 router.get('/dashboard/summary', adminUserCtrl.dashboardSummary)
+router.get('/dashboard/trends', adminUserCtrl.dashboardTrends)
 
 // ─── Admin Users (SUPER_ADMIN only) ──────────────────────────────────────────
 router.get('/users', requireRoles('SUPER_ADMIN', 'ADMIN'), adminUserCtrl.list)

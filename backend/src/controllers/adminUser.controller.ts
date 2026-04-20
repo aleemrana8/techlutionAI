@@ -276,3 +276,34 @@ export async function dashboardSummary(req: AdminRequest, res: Response, next: N
     })
   } catch (err) { next(err) }
 }
+
+/* ─── Dashboard Trends (last 7 months) ─────────────────────────────────────── */
+
+export async function dashboardTrends(req: AdminRequest, res: Response, next: NextFunction) {
+  try {
+    const now = new Date()
+    const months: { name: string; start: Date; end: Date }[] = []
+
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const end = new Date(d.getFullYear(), d.getMonth() + 1, 1)
+      months.push({
+        name: d.toLocaleString('en', { month: 'short' }),
+        start: d,
+        end,
+      })
+    }
+
+    const trends = await Promise.all(
+      months.map(async (m) => {
+        const [visitors, leads] = await Promise.all([
+          prisma.visitor.count({ where: { createdAt: { gte: m.start, lt: m.end } } }),
+          prisma.lead.count({ where: { createdAt: { gte: m.start, lt: m.end } } }),
+        ])
+        return { name: m.name, visitors, leads }
+      })
+    )
+
+    sendSuccess(res, trends)
+  } catch (err) { next(err) }
+}

@@ -5,7 +5,7 @@ import {
   DollarSign, TrendingUp, Activity, Briefcase,
 } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { getDashboard } from '../../api/adminApi'
+import { getDashboard, getDashboardTrends } from '../../api/adminApi'
 import { useDashboardSocket } from '../hooks/useSocket'
 
 /* ─── Animated Counter ─────────────────────────────────────────────────────── */
@@ -33,19 +33,19 @@ function AnimatedCounter({ value, duration = 1500 }: { value: number; duration?:
   return <>{count.toLocaleString()}</>
 }
 
-/* ─── Mock chart data ──────────────────────────────────────────────────────── */
+/* ─── Fallback chart data ──────────────────────────────────────────────────── */
 
-const chartData = [
-  { name: 'Jan', visitors: 1200, leads: 45, revenue: 8500 },
-  { name: 'Feb', visitors: 1800, leads: 62, revenue: 12000 },
-  { name: 'Mar', visitors: 2400, leads: 78, revenue: 15500 },
-  { name: 'Apr', visitors: 2100, leads: 71, revenue: 14200 },
-  { name: 'May', visitors: 3200, leads: 95, revenue: 22000 },
-  { name: 'Jun', visitors: 3800, leads: 110, revenue: 28500 },
-  { name: 'Jul', visitors: 4200, leads: 128, revenue: 32000 },
+const fallbackChartData = [
+  { name: 'Jan', visitors: 0, leads: 0 },
+  { name: 'Feb', visitors: 0, leads: 0 },
+  { name: 'Mar', visitors: 0, leads: 0 },
+  { name: 'Apr', visitors: 0, leads: 0 },
+  { name: 'May', visitors: 0, leads: 0 },
+  { name: 'Jun', visitors: 0, leads: 0 },
+  { name: 'Jul', visitors: 0, leads: 0 },
 ]
 
-const recentLeads = [
+const recentInquiries = [
   { name: 'Ahmed Hassan', service: 'AI & ML', time: '2 min ago', status: 'new' },
   { name: 'Sarah Johnson', service: 'Healthcare IT', time: '15 min ago', status: 'new' },
   { name: 'Li Wei', service: 'Automation', time: '1 hour ago', status: 'contacted' },
@@ -57,7 +57,7 @@ const recentLeads = [
 
 const CARDS = [
   { label: 'Total Visitors', value: 28430, icon: Users, color: 'cyan', change: '+12.5%' },
-  { label: 'Total Leads', value: 1284, icon: MessageSquare, color: 'violet', change: '+8.3%' },
+  { label: 'Total Inquiries', value: 1284, icon: MessageSquare, color: 'violet', change: '+8.3%' },
   { label: 'Active Clients', value: 64, icon: UserCheck, color: 'emerald', change: '+3.1%' },
   { label: 'Active Projects', value: 18, icon: FolderKanban, color: 'orange', change: '+5.0%' },
   { label: 'Pending Tasks', value: 42, icon: Activity, color: 'rose', change: '-2.1%' },
@@ -84,10 +84,17 @@ const statusColors: Record<string, string> = {
 
 export default function Dashboard() {
   const [data, setData] = useState<any>(null)
+  const [chartData, setChartData] = useState<any[]>(fallbackChartData)
 
   const fetchData = useCallback(() => {
     getDashboard()
       .then((res) => setData(res.data.data))
+      .catch(() => {})
+    getDashboardTrends()
+      .then((res) => {
+        const trends = res.data.data
+        if (Array.isArray(trends) && trends.length > 0) setChartData(trends)
+      })
       .catch(() => {})
   }, [])
 
@@ -99,7 +106,7 @@ export default function Dashboard() {
   const cards = data
     ? [
         { label: 'Total Visitors', value: data.visitors?.total ?? 0, icon: Users, color: 'cyan', change: '' },
-        { label: 'Total Leads', value: data.leads?.total ?? 0, icon: MessageSquare, color: 'violet', change: '' },
+        { label: 'Total Inquiries', value: data.leads?.total ?? 0, icon: MessageSquare, color: 'violet', change: '' },
         { label: 'Active Clients', value: data.clients?.active ?? 0, icon: UserCheck, color: 'emerald', change: '' },
         { label: 'Active Projects', value: data.projects?.total ?? 0, icon: FolderKanban, color: 'orange', change: '' },
         { label: 'Today Visitors', value: data.visitors?.today ?? 0, icon: Activity, color: 'rose', change: '' },
@@ -111,7 +118,7 @@ export default function Dashboard() {
 
   const leads = data?.recentLeads?.length ? data.recentLeads.map((l: any) => ({
     name: l.name, service: l.service || l.subject || '-', time: new Date(l.createdAt).toLocaleDateString(), status: (l.status || 'new').toLowerCase(),
-  })) : recentLeads
+  })) : recentInquiries
   return (
     <div className="space-y-6">
       {/* Page Title */}
@@ -166,7 +173,7 @@ export default function Dashboard() {
           transition={{ delay: 0.3 }}
           className="lg:col-span-2 rounded-xl bg-slate-900/60 backdrop-blur-sm border border-white/[0.06] p-5"
         >
-          <h3 className="text-white font-semibold text-sm mb-4">Visitor & Lead Trends</h3>
+          <h3 className="text-white font-semibold text-sm mb-4">Visitor & Inquiry Trends</h3>
           <ResponsiveContainer width="100%" height={280}>
             <AreaChart data={chartData}>
               <defs>
@@ -199,7 +206,7 @@ export default function Dashboard() {
           transition={{ delay: 0.4 }}
           className="rounded-xl bg-slate-900/60 backdrop-blur-sm border border-white/[0.06] p-5"
         >
-          <h3 className="text-white font-semibold text-sm mb-4">Recent Leads</h3>
+          <h3 className="text-white font-semibold text-sm mb-4">Recent Inquiries</h3>
           <div className="space-y-3">
             {leads.map((lead: any, i: number) => (
               <motion.div

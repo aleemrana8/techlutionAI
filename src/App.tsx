@@ -2,6 +2,7 @@ import { motion, useScroll, useSpring } from 'framer-motion'
 import { lazy, Suspense, useEffect, useState } from 'react'
 import AppRoutes from './routes/AppRoutes'
 import { useSmoothScroll } from './hooks/useSmoothScroll'
+import { useVisitorTracking } from './hooks/useVisitorTracking'
 
 const ParticlesBackground = lazy(() => import('./components/animations/ParticlesBackground'))
 const CursorGlow = lazy(() => import('./components/animations/CursorGlow'))
@@ -11,6 +12,9 @@ const ThreeBackground = lazy(() => import('./components/animations/ThreeBackgrou
 function App() {
   /* ── Lenis smooth scroll ── */
   useSmoothScroll()
+
+  /* ── Visitor tracking ── */
+  useVisitorTracking()
 
   /* ── Mobile detection ── */
   const [isMobile, setIsMobile] = useState(false)

@@ -46,8 +46,8 @@ export default function Leads() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Leads & Inquiries</h1>
-        <p className="text-slate-400 text-sm mt-1">Track all website form submissions and chatbot leads</p>
+        <h1 className="text-2xl font-bold text-white">Client Inquiries & Project Proposals</h1>
+        <p className="text-slate-400 text-sm mt-1">Track all client inquiries, project proposals, and contact submissions</p>
       </div>
 
       {/* Stats */}
@@ -72,7 +72,7 @@ export default function Leads() {
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search leads…"
+            placeholder="Search inquiries…"
             className="w-full bg-white/[0.04] border border-white/[0.06] text-white text-sm rounded-xl pl-10 pr-4 py-2 placeholder-slate-600 focus:outline-none focus:border-cyan-500/30 transition-all"
           />
         </div>
@@ -103,7 +103,7 @@ export default function Leads() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/[0.06]">
-                {['Lead', 'Service', 'Source', 'Status', 'Timestamp', 'Actions'].map(h => (
+                {['Client', 'Service', 'Source', 'Status', 'Timestamp', 'Actions'].map(h => (
                   <th key={h} className="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider px-4 py-3">{h}</th>
                 ))}
               </tr>
