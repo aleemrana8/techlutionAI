@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Lock, User, Eye, EyeOff, Loader2, Shield } from 'lucide-react'
+import { Lock, User, Eye, EyeOff, Loader2, Shield, ArrowLeft } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 export default function AdminLogin() {
@@ -37,6 +37,15 @@ export default function AdminLogin() {
 
   return (
     <div className="min-h-screen bg-[#020817] flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Back to website */}
+      <a
+        href="/"
+        className="absolute top-6 left-6 flex items-center gap-2 text-sm text-slate-400 hover:text-cyan-400 transition-colors z-10 group"
+      >
+        <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
+        Back to Techlution AI
+      </a>
+
       {/* Background glow */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-violet-500/10 rounded-full blur-[120px] pointer-events-none" />

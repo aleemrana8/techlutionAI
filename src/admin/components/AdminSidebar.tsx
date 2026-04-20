@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Users, UserCheck, Briefcase, DollarSign,
   FolderKanban, MessageSquare, Settings, LogOut, ChevronLeft,
-  ChevronRight, Shield,
+  ChevronRight, Shield, ExternalLink,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
@@ -102,6 +102,20 @@ export default function AdminSidebar() {
 
       {/* Bottom controls */}
       <div className="p-3 border-t border-white/[0.06] space-y-1">
+        <a
+          href="/"
+          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-500/20 border border-transparent transition-all"
+        >
+          <ExternalLink size={18} className="flex-shrink-0" />
+          <AnimatePresence>
+            {!collapsed && (
+              <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                Back to Website
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </a>
+
         <button
           onClick={handleLogout}
           className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 hover:border-red-500/20 border border-transparent transition-all"
