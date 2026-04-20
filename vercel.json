@@ -3,6 +3,9 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "rewrites": [
+    { "source": "/api/admin/(.*)", "destination": "https://techlution-api.onrender.com/api/admin/$1" },
+    { "source": "/api/visitor", "destination": "https://techlution-api.onrender.com/api/visitor" },
+    { "source": "/api/chat-stream", "destination": "https://techlution-api.onrender.com/api/chat-stream" },
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
