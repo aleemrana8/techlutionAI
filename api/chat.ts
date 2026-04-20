@@ -323,54 +323,72 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).json({ success: false, message: 'Method not allowed' })
 
-  const { message, history: rawHistory } = req.body
-  if (!message || typeof message !== 'string') {
-    return res.status(400).json({ success: false, message: 'message is required' })
-  }
-
-  const intent = detectIntent(message)
-  const language = detectLanguage(message)
-
-  // Format history from frontend (last 6 exchanges)
-  let history = ''
-  if (Array.isArray(rawHistory)) {
-    history = rawHistory
-      .slice(-6)
-      .filter((h: any) => h && typeof h.user === 'string' && typeof h.bot === 'string')
-      .map((h: any) => 'User: ' + h.user + '\nBot: ' + h.bot)
-      .join('\n\n')
-  }
-
-  // Try vector search (lazy-init embeddings on warm start)
-  await ensureEmbeddings()
-  const vectorCtx = await vectorSearch(message)
-  const context = vectorCtx || getKeywordContext(message)
-
-  const systemPrompt = buildSystemPrompt(language)
-  const enhancedPrompt = buildFinalPrompt({ message, intent, context, history, language })
-
-  // Gemini (try multiple models)
-  if (process.env.GEMINI_API_KEY) {
-    const geminiModels = ['gemini-2.0-flash', 'gemini-2.0-flash-lite']
-    const { GoogleGenerativeAI } = await import('@google/generative-ai')
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY.trim())
-    for (const modelName of geminiModels) {
-      try {
-        const model = genAI.getGenerativeModel({
-          model: modelName,
-          systemInstruction: systemPrompt,
-          generationConfig: { temperature: 0.7, topP: 0.9, topK: 40, maxOutputTokens: 1024 },
-        })
-        const result = await model.generateContent(enhancedPrompt)
-        const reply = result.response.text()
-        if (reply && reply.trim().length > 5) return res.json({ success: true, data: { reply, intent, language } })
-        console.warn(`Gemini ${modelName}: empty response`)
-      } catch (err: any) {
-        console.warn(`Gemini ${modelName} error:`, err.message?.substring(0, 200))
-      }
+  try {
+    const { message, history: rawHistory } = req.body || {}
+    if (!message || typeof message !== 'string') {
+      return res.status(400).json({ success: false, message: 'message is required' })
     }
-  }
 
-  const reply = getSmartFallback(message)
-  res.json({ success: true, data: { reply, intent, language } })
+    const intent = detectIntent(message)
+    const language = detectLanguage(message)
+
+    // Format history from frontend (last 6 exchanges)
+    let history = ''
+    if (Array.isArray(rawHistory)) {
+      history = rawHistory
+        .slice(-6)
+        .filter((h: any) => h && typeof h.user === 'string' && typeof h.bot === 'string')
+        .map((h: any) => 'User: ' + h.user + '\nBot: ' + h.bot)
+        .join('\n\n')
+    }
+
+    // Try vector search (safe — falls back to keyword context)
+    let context = ''
+    try {
+      await ensureEmbeddings()
+      const vectorCtx = await vectorSearch(message)
+      context = vectorCtx || getKeywordContext(message)
+    } catch {
+      context = getKeywordContext(message)
+    }
+
+    const systemPrompt = buildSystemPrompt(language)
+    const enhancedPrompt = buildFinalPrompt({ message, intent, context, history, language })
+
+    // Gemini (try multiple models)
+    if (process.env.GEMINI_API_KEY) {
+      const geminiModels = ['gemini-2.0-flash', 'gemini-2.0-flash-lite']
+      try {
+        const { GoogleGenerativeAI } = await import('@google/generative-ai')
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY.trim())
+        for (const modelName of geminiModels) {
+          try {
+            const model = genAI.getGenerativeModel({
+              model: modelName,
+              systemInstruction: systemPrompt,
+              generationConfig: { temperature: 0.7, topP: 0.9, topK: 40, maxOutputTokens: 1024 },
+            })
+            const result = await model.generateContent(enhancedPrompt)
+            const reply = result.response.text()
+            if (reply && reply.trim().length > 5) return res.json({ success: true, data: { reply, intent, language } })
+            console.warn(`Gemini ${modelName}: empty response`)
+          } catch (err: any) {
+            console.warn(`Gemini ${modelName} error:`, err.message?.substring(0, 200))
+          }
+        }
+      } catch (err: any) {
+        console.warn('Gemini import error:', err.message?.substring(0, 200))
+      }
+    } else {
+      console.warn('GEMINI_API_KEY not set')
+    }
+
+    const reply = getSmartFallback(message)
+    return res.json({ success: true, data: { reply, intent, language } })
+  } catch (err: any) {
+    console.error('Chat handler error:', err)
+    // Even on crash, return a valid response so frontend doesn't show connection error
+    const fallback = getSmartFallback(req.body?.message || '')
+    return res.status(200).json({ success: true, data: { reply: fallback, intent: 'general', language: 'English' } })
+  }
 }

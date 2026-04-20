@@ -10,7 +10,7 @@
   },
   "rewrites": [
     { "source": "/api/chat", "destination": "/api/chat" },
-    { "source": "/api/chat-stream", "destination": "/api/[...path]" },
+    { "source": "/api/chat-stream", "destination": "/api/chat-stream" },
     { "source": "/api/contact", "destination": "/api/contact" },
     { "source": "/api/contact/project", "destination": "/api/contact/project" },
     { "source": "/api/(.*)", "destination": "/api/[...path]" },

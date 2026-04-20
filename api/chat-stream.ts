@@ -268,34 +268,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // Gemini streaming
   if (process.env.GEMINI_API_KEY) {
-    const geminiModels = ['gemini-2.0-flash', 'gemini-2.0-flash-lite']
-    const { GoogleGenerativeAI } = await import('@google/generative-ai')
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY.trim())
-    for (const modelName of geminiModels) {
-      try {
-        const model = genAI.getGenerativeModel({
-          model: modelName,
-          systemInstruction: systemPrompt,
-          generationConfig: { temperature: 0.7, topP: 0.9, topK: 40, maxOutputTokens: 1024 },
-        })
-        const result = await model.generateContentStream(enhancedPrompt)
-        let hasContent = false
-        for await (const chunk of result.stream) {
-          const text = chunk.text()
-          if (text) {
-            hasContent = true
-            res.write('data: ' + JSON.stringify({ type: 'chunk', text }) + '\n\n')
+    try {
+      const geminiModels = ['gemini-2.0-flash', 'gemini-2.0-flash-lite']
+      const { GoogleGenerativeAI } = await import('@google/generative-ai')
+      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY.trim())
+      for (const modelName of geminiModels) {
+        try {
+          const model = genAI.getGenerativeModel({
+            model: modelName,
+            systemInstruction: systemPrompt,
+            generationConfig: { temperature: 0.7, topP: 0.9, topK: 40, maxOutputTokens: 1024 },
+          })
+          const result = await model.generateContentStream(enhancedPrompt)
+          let hasContent = false
+          for await (const chunk of result.stream) {
+            const text = chunk.text()
+            if (text) {
+              hasContent = true
+              res.write('data: ' + JSON.stringify({ type: 'chunk', text }) + '\n\n')
+            }
           }
+          if (hasContent) {
+            res.write('data: [DONE]\n\n')
+            res.end()
+            return
+          }
+          break
+        } catch (err: any) {
+          console.warn(`Gemini stream ${modelName} error:`, err.message?.substring(0, 200))
         }
-        if (hasContent) {
-          res.write('data: [DONE]\n\n')
-          res.end()
-          return
-        }
-        break
-      } catch (err: any) {
-        console.warn(`Gemini stream ${modelName} error:`, err.message?.substring(0, 120))
       }
+    } catch (err: any) {
+      console.warn('Gemini import error:', err.message?.substring(0, 200))
     }
   }
 

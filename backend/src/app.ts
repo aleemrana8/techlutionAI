@@ -179,41 +179,44 @@ app.post('/api/visitor', async (req, res) => {
 // --- Chat Endpoint ---
 
 app.post('/api/chat', async (req, res) => {
-  const { message, sessionId } = req.body
-  if (!message || typeof message !== 'string') { res.status(400).json({ success: false, message: 'message is required' }); return }
+  try {
+    const { message, sessionId } = req.body
+    if (!message || typeof message !== 'string') { res.status(400).json({ success: false, message: 'message is required' }); return }
 
-  const sid = typeof sessionId === 'string' ? sessionId : 'default'
-  const intent = detectIntent(message)
-  const language = detectLanguage(message)
-  const memory = getMemory(sid)
-  const history = formatHistory(memory)
+    const sid = typeof sessionId === 'string' ? sessionId : 'default'
+    const intent = detectIntent(message)
+    const language = detectLanguage(message)
+    const memory = getMemory(sid)
+    const history = formatHistory(memory)
 
-  let context: string
-  try { context = await vectorSearch(message) } catch { context = getKeywordContext(message) }
+    let context: string
+    try { context = await vectorSearch(message) } catch { context = getKeywordContext(message) }
 
-  const systemPrompt = buildSystemPrompt(language)
-  const enhancedPrompt = buildFinalPrompt({ message, intent, context, history, language })
+    const systemPrompt = buildSystemPrompt(language)
+    const enhancedPrompt = buildFinalPrompt({ message, intent, context, history, language })
 
-  if (process.env.GEMINI_API_KEY) {
-    const geminiModels = ['gemini-2.0-flash', 'gemini-2.0-flash-lite']
-    const { GoogleGenerativeAI } = await import('@google/generative-ai')
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY.trim())
-    for (const modelName of geminiModels) {
+    if (process.env.GEMINI_API_KEY) {
+      const geminiModels = ['gemini-2.0-flash', 'gemini-2.0-flash-lite']
       try {
-        const model = genAI.getGenerativeModel({
-          model: modelName,
-          systemInstruction: systemPrompt,
-          generationConfig: { temperature: 0.7, topP: 0.9, topK: 40, maxOutputTokens: 1024 },
-        })
-        const result = await model.generateContent(enhancedPrompt)
-        const reply = result.response.text()
-        if (reply && reply.trim().length > 5) { addMemory(sid, message, reply); res.json({ success: true, data: { reply, intent, language } }); return }
-        logger.warn(`Gemini ${modelName}: empty response`)
-      } catch (err: any) { logger.warn(`Gemini ${modelName} error:`, err?.message?.substring(0, 200) || err) }
+        const { GoogleGenerativeAI } = await import('@google/generative-ai')
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY.trim())
+        for (const modelName of geminiModels) {
+          try {
+            const model = genAI.getGenerativeModel({
+              model: modelName,
+              systemInstruction: systemPrompt,
+              generationConfig: { temperature: 0.7, topP: 0.9, topK: 40, maxOutputTokens: 1024 },
+            })
+            const result = await model.generateContent(enhancedPrompt)
+            const reply = result.response.text()
+            if (reply && reply.trim().length > 5) { addMemory(sid, message, reply); res.json({ success: true, data: { reply, intent, language } }); return }
+            logger.warn(`Gemini ${modelName}: empty response`)
+          } catch (err: any) { logger.warn(`Gemini ${modelName} error:`, err?.message?.substring(0, 200) || err) }
+        }
+      } catch (err: any) { logger.warn('Gemini import error:', err?.message?.substring(0, 200) || err) }
+    } else {
+      logger.warn('GEMINI_API_KEY not set — skipping Gemini')
     }
-  } else {
-    logger.warn('GEMINI_API_KEY not set — skipping Gemini')
-  }
 
   if (process.env.OPENAI_API_KEY) {
     try {
@@ -225,17 +228,23 @@ app.post('/api/chat', async (req, res) => {
     } catch (err: any) { logger.warn('OpenAI unavailable:', err.message) }
   }
 
-  const reply = getSmartFallback(message)
-  addMemory(sid, message, reply)
-  res.json({ success: true, data: { reply, intent, language } })
+    const reply = getSmartFallback(message)
+    addMemory(sid, message, reply)
+    res.json({ success: true, data: { reply, intent, language } })
+  } catch (err: any) {
+    logger.error('Chat handler crash:', err?.message || err)
+    const fallback = getSmartFallback(req.body?.message || '')
+    res.status(200).json({ success: true, data: { reply: fallback, intent: 'general', language: 'English' } })
+  }
 })
 
 // --- Chat Stream (SSE) ---
 
 app.get('/api/chat-stream', async (req, res) => {
-  const message = typeof req.query.message === 'string' ? req.query.message.trim() : ''
-  const sid = typeof req.query.sessionId === 'string' ? req.query.sessionId : 'default'
-  if (!message) { res.status(400).json({ success: false, message: 'message is required' }); return }
+  try {
+    const message = typeof req.query.message === 'string' ? req.query.message.trim() : ''
+    const sid = typeof req.query.sessionId === 'string' ? req.query.sessionId : 'default'
+    if (!message) { res.status(400).json({ success: false, message: 'message is required' }); return }
 
   res.setHeader('Content-Type', 'text/event-stream')
   res.setHeader('Cache-Control', 'no-cache')
@@ -258,24 +267,26 @@ app.get('/api/chat-stream', async (req, res) => {
   let fullReply = ''
 
   if (process.env.GEMINI_API_KEY) {
-    const geminiModels = ['gemini-2.0-flash', 'gemini-2.0-flash-lite']
-    const { GoogleGenerativeAI } = await import('@google/generative-ai')
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY.trim())
-    for (const modelName of geminiModels) {
-      try {
-        const model = genAI.getGenerativeModel({
-          model: modelName,
-          systemInstruction: systemPrompt,
-          generationConfig: { temperature: 0.7, topP: 0.9, topK: 40, maxOutputTokens: 1024 },
-        })
-        const result = await model.generateContentStream(enhancedPrompt)
-        for await (const chunk of result.stream) {
-          const text = chunk.text()
-          if (text) { fullReply += text; res.write('data: ' + JSON.stringify({ type: 'chunk', text }) + '\n\n') }
-        }
-        if (fullReply) { addMemory(sid, message, fullReply); res.write('data: [DONE]\n\n'); res.end(); return }
-      } catch (err: any) { logger.warn(`Gemini stream ${modelName} error:`, err?.message?.substring(0, 200) || err) }
-    }
+    try {
+      const geminiModels = ['gemini-2.0-flash', 'gemini-2.0-flash-lite']
+      const { GoogleGenerativeAI } = await import('@google/generative-ai')
+      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY.trim())
+      for (const modelName of geminiModels) {
+        try {
+          const model = genAI.getGenerativeModel({
+            model: modelName,
+            systemInstruction: systemPrompt,
+            generationConfig: { temperature: 0.7, topP: 0.9, topK: 40, maxOutputTokens: 1024 },
+          })
+          const result = await model.generateContentStream(enhancedPrompt)
+          for await (const chunk of result.stream) {
+            const text = chunk.text()
+            if (text) { fullReply += text; res.write('data: ' + JSON.stringify({ type: 'chunk', text }) + '\n\n') }
+          }
+          if (fullReply) { addMemory(sid, message, fullReply); res.write('data: [DONE]\n\n'); res.end(); return }
+        } catch (err: any) { logger.warn(`Gemini stream ${modelName} error:`, err?.message?.substring(0, 200) || err) }
+      }
+    } catch (err: any) { logger.warn('Gemini import error:', err?.message?.substring(0, 200) || err) }
   }
 
   if (process.env.OPENAI_API_KEY && !fullReply) {
@@ -304,8 +315,21 @@ app.get('/api/chat-stream', async (req, res) => {
     }
   }
 
-  res.write('data: [DONE]\n\n')
-  res.end()
+    res.write('data: [DONE]\n\n')
+    res.end()
+  } catch (err: any) {
+    logger.error('Chat stream crash:', err?.message || err)
+    try {
+      const fallback = getSmartFallback(typeof req.query.message === 'string' ? req.query.message : '')
+      const words = fallback.split(/(\s+)/)
+      for (let i = 0; i < words.length; i += 2) {
+        const chunk = words.slice(i, i + 2).join('')
+        if (chunk) res.write('data: ' + JSON.stringify({ type: 'chunk', text: chunk }) + '\n\n')
+      }
+      res.write('data: [DONE]\n\n')
+      res.end()
+    } catch { res.end() }
+  }
 })
 
 // --- Error Handling ---
