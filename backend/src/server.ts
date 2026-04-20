@@ -62,7 +62,12 @@ const loginLimiter = rateLimit({
   message: { success: false, message: 'Too many login attempts, please try again later.' },
 })
 
-app.use('/api/', limiter)
+// Apply rate limiter to all /api/ except login routes
+app.use('/api/', (req, res, next) => {
+  // Skip rate limiting for admin login
+  if (req.path === '/admin/login' || req.path === '/admin/env-login') return next()
+  limiter(req, res, next)
+})
 
 // --- Body Parsing ---
 
