@@ -316,3 +316,151 @@ model File {
 
   @@map("files")
 }
+
+// ─── Admin Panel Models ───────────────────────────────────────────────────────
+
+enum VisitorDevice {
+  DESKTOP
+  MOBILE
+  TABLET
+  OTHER
+}
+
+enum ClientStatus {
+  ACTIVE
+  INACTIVE
+  PROSPECT
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  ON_LEAVE
+  TERMINATED
+}
+
+enum FinanceType {
+  INCOME
+  EXPENSE
+}
+
+model Visitor {
+  id        String        @id @default(cuid())
+  ipAddress String?
+  device    VisitorDevice @default(OTHER)
+  browser   String?
+  os        String?
+  page      String?
+  referrer  String?
+  country   String?
+  city      String?
+  sessionId String?
+  createdAt DateTime      @default(now())
+
+  @@map("visitors")
+}
+
+model Client {
+  id        String       @id @default(cuid())
+  name      String
+  email     String       @unique
+  phone     String?
+  company   String?
+  industry  String?
+  status    ClientStatus @default(PROSPECT)
+  notes     String?
+  projects  Int          @default(0)
+  revenue   Float        @default(0)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@map("clients")
+}
+
+model Employee {
+  id         String         @id @default(cuid())
+  name       String
+  email      String         @unique
+  phone      String?
+  role       String
+  department String
+  status     EmployeeStatus @default(ACTIVE)
+  workload   Int            @default(0)
+  salary     Float?
+  joinDate   DateTime       @default(now())
+  notes      String?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@map("employees")
+}
+
+model Finance {
+  id          String      @id @default(cuid())
+  type        FinanceType
+  amount      Float
+  description String
+  category    String?
+  projectRef  String?
+  date        DateTime    @default(now())
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@map("finances")
+}
+
+// ─── RBAC ─────────────────────────────────────────────────────────────────────
+
+enum AdminRole {
+  SUPER_ADMIN
+  ADMIN
+  HR
+  FINANCE
+  MANAGER
+  SUPPORT
+}
+
+model AdminUser {
+  id           String    @id @default(cuid())
+  username     String    @unique
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         AdminRole @default(SUPPORT)
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  logs         ActivityLog[]
+
+  @@map("admin_users")
+}
+
+model ActivityLog {
+  id          String    @id @default(cuid())
+  action      String
+  entity      String?
+  entityId    String?
+  details     String?
+  ipAddress   String?
+  userAgent   String?
+  adminUserId String?
+  adminUser   AdminUser? @relation(fields: [adminUserId], references: [id], onDelete: SetNull)
+  createdAt   DateTime  @default(now())
+
+  @@index([adminUserId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
+
+model AnalyticsSnapshot {
+  id        String   @id @default(cuid())
+  date      DateTime @default(now())
+  metric    String
+  value     Float
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([metric, date])
+  @@map("analytics_snapshots")
+}

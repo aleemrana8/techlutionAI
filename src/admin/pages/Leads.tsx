@@ -1,31 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Search, Filter, Eye, Check, MessageSquare, Mail, Phone } from 'lucide-react'
+import { Search, Eye, Check, MessageSquare, Mail, Phone } from 'lucide-react'
+import { getLeads } from '../../api/adminApi'
 
 type LeadStatus = 'New' | 'Contacted' | 'Qualified' | 'Converted' | 'Closed'
-
-interface Lead {
-  id: number
-  name: string
-  email: string
-  phone: string
-  service: string
-  message: string
-  timestamp: string
-  status: LeadStatus
-  source: string
-}
-
-const mockLeads: Lead[] = [
-  { id: 1, name: 'Ahmed Hassan', email: 'ahmed@corp.com', phone: '+971 50 123 4567', service: 'AI & ML Solutions', message: 'Need a custom NLP model for Arabic text classification', timestamp: '2026-04-20 14:30', status: 'New', source: 'Chatbot' },
-  { id: 2, name: 'Sarah Johnson', email: 'sarah@healthco.com', phone: '+1 555 234 5678', service: 'Healthcare IT', message: 'Looking for EHR integration with our existing system', timestamp: '2026-04-20 12:15', status: 'New', source: 'Contact Form' },
-  { id: 3, name: 'Li Wei', email: 'liwei@techfirm.cn', phone: '+86 138 0013 8000', service: 'Automation', message: 'Want to automate our customer onboarding workflow', timestamp: '2026-04-19 18:45', status: 'Contacted', source: 'Chatbot' },
-  { id: 4, name: 'David Miller', email: 'david@startup.io', phone: '+1 555 345 6789', service: 'DevOps & Cloud', message: 'Need help migrating from AWS to Azure', timestamp: '2026-04-19 10:00', status: 'Qualified', source: 'Email' },
-  { id: 5, name: 'Fatima Ali', email: 'fatima@medsys.pk', phone: '+92 300 123 4567', service: 'RCM Automation', message: 'Medical billing automation for 50+ providers', timestamp: '2026-04-18 16:30', status: 'Converted', source: 'Contact Form' },
-  { id: 6, name: 'James Brown', email: 'james@retailmax.com', phone: '+44 20 7946 0958', service: 'Data Pipelines', message: 'ETL pipeline for our e-commerce analytics', timestamp: '2026-04-17 09:20', status: 'Closed', source: 'Chatbot' },
-  { id: 7, name: 'Priya Sharma', email: 'priya@innov8.in', phone: '+91 98765 43210', service: 'AI Voice Agents', message: 'Voice AI for restaurant reservations and orders', timestamp: '2026-04-16 14:00', status: 'Contacted', source: 'Start Project' },
-  { id: 8, name: 'Omar Khalid', email: 'omar@gulftech.ae', phone: '+971 55 987 6543', service: 'Computer Vision', message: 'Need OCR for Arabic + English document scanning', timestamp: '2026-04-15 11:00', status: 'New', source: 'Contact Form' },
-]
 
 const STATUS_COLORS: Record<LeadStatus, string> = {
   New: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
@@ -41,13 +19,19 @@ export default function Leads() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<LeadStatus | 'All'>('All')
   const [expandedId, setExpandedId] = useState<number | null>(null)
+  const [leads, setLeads] = useState<any[]>([])
+  useEffect(() => {
+    getLeads()
+      .then(r => setLeads(r.data.data || []))
+      .catch(() => {})
+  }, [])
 
-  const filtered = mockLeads.filter(l => {
-    const matchSearch = l.name.toLowerCase().includes(search.toLowerCase()) ||
-      l.email.toLowerCase().includes(search.toLowerCase()) ||
-      l.service.toLowerCase().includes(search.toLowerCase()) ||
-      l.message.toLowerCase().includes(search.toLowerCase())
-    const matchStatus = statusFilter === 'All' || l.status === statusFilter
+  const filtered = leads.filter((l: any) => {
+    const matchSearch = (l.name || '').toLowerCase().includes(search.toLowerCase()) ||
+      (l.email || '').toLowerCase().includes(search.toLowerCase()) ||
+      (l.service || l.subject || '').toLowerCase().includes(search.toLowerCase()) ||
+      (l.message || '').toLowerCase().includes(search.toLowerCase())
+    const matchStatus = statusFilter === 'All' || (l.status || 'New') === statusFilter
     return matchSearch && matchStatus
   })
 
@@ -67,7 +51,7 @@ export default function Leads() {
             animate={{ opacity: 1, y: 0 }}
             className="rounded-xl bg-slate-900/60 backdrop-blur-sm border border-white/[0.06] p-3 text-center"
           >
-            <p className="text-lg font-bold text-white">{mockLeads.filter(l => l.status === s).length}</p>
+            <p className="text-lg font-bold text-white">{leads.filter((l: any) => (l.status || 'New') === s).length}</p>
             <p className="text-[11px] text-slate-500">{s}</p>
           </motion.div>
         ))}
@@ -138,18 +122,18 @@ export default function Leads() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-slate-300 text-xs">{lead.service}</td>
+                    <td className="px-4 py-3 text-slate-300 text-xs">{lead.service || lead.subject || '-'}</td>
                     <td className="px-4 py-3">
                       <span className="text-xs px-2 py-0.5 rounded-full bg-white/[0.05] border border-white/[0.06] text-slate-400">
-                        {lead.source}
+                        {lead.source || 'Website'}
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`text-xs px-2.5 py-0.5 rounded-full border ${STATUS_COLORS[lead.status]}`}>
-                        {lead.status}
+                      <span className={`text-xs px-2.5 py-0.5 rounded-full border ${STATUS_COLORS[(lead.status || 'New') as LeadStatus] || STATUS_COLORS.New}`}>
+                        {lead.status || 'New'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-slate-400 text-xs">{lead.timestamp}</td>
+                    <td className="px-4 py-3 text-slate-400 text-xs">{new Date(lead.createdAt || lead.timestamp).toLocaleDateString()}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
                         <button className="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-slate-500 hover:text-cyan-400 transition-colors" title="View details">

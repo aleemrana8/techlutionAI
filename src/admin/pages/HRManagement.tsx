@@ -1,57 +1,45 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Search, Users, Briefcase, Clock, Star, ChevronDown } from 'lucide-react'
+import { getEmployees } from '../../api/adminApi'
 
-interface Employee {
-  id: number
-  name: string
-  role: string
-  department: string
-  status: 'Online' | 'Away' | 'Offline'
-  tasks: number
-  workload: 'Low' | 'Medium' | 'High'
-  performance: number
-  avatar: string
+const statusColors: Record<string, string> = {
+  ACTIVE: 'bg-emerald-400',
+  ON_LEAVE: 'bg-amber-400',
+  TERMINATED: 'bg-slate-500',
 }
 
-const mockEmployees: Employee[] = [
-  { id: 1, name: 'Rana Muhammad Aleem', role: 'CEO & Full Stack Dev', department: 'Engineering', status: 'Online', tasks: 8, workload: 'High', performance: 98, avatar: 'RA' },
-  { id: 2, name: 'Danish Ahmed', role: 'AI/ML Engineer', department: 'Engineering', status: 'Online', tasks: 5, workload: 'Medium', performance: 92, avatar: 'DA' },
-  { id: 3, name: 'Ayesha Khan', role: 'UI/UX Designer', department: 'Design', status: 'Online', tasks: 4, workload: 'Medium', performance: 88, avatar: 'AK' },
-  { id: 4, name: 'Hassan Ali', role: 'DevOps Engineer', department: 'Engineering', status: 'Away', tasks: 6, workload: 'High', performance: 90, avatar: 'HA' },
-  { id: 5, name: 'Sana Malik', role: 'Project Manager', department: 'Operations', status: 'Online', tasks: 3, workload: 'Low', performance: 94, avatar: 'SM' },
-  { id: 6, name: 'Usman Tariq', role: 'Backend Developer', department: 'Engineering', status: 'Offline', tasks: 7, workload: 'High', performance: 86, avatar: 'UT' },
-  { id: 7, name: 'Maria Gonzalez', role: 'QA Engineer', department: 'Quality', status: 'Online', tasks: 4, workload: 'Medium', performance: 91, avatar: 'MG' },
-  { id: 8, name: 'Omar Farooq', role: 'Data Engineer', department: 'Engineering', status: 'Away', tasks: 5, workload: 'Medium', performance: 87, avatar: 'OF' },
-]
-
-const statusColors = {
-  Online: 'bg-emerald-400',
-  Away: 'bg-amber-400',
-  Offline: 'bg-slate-500',
+const workloadColors: Record<string, string> = {
+  LOW: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  MEDIUM: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
+  HIGH: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
 }
 
-const workloadColors = {
-  Low: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  Medium: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
-  High: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
+function getWorkloadLabel(w: number): string {
+  if (w <= 33) return 'LOW'
+  if (w <= 66) return 'MEDIUM'
+  return 'HIGH'
 }
 
-const departments = ['All', 'Engineering', 'Design', 'Operations', 'Quality']
+const departments = ['All', 'Engineering', 'Design', 'Operations', 'Quality', 'Marketing', 'Sales']
 
 export default function HRManagement() {
   const [search, setSearch] = useState('')
   const [dept, setDept] = useState('All')
+  const [employees, setEmployees] = useState<any[]>([])
+  useEffect(() => {
+    getEmployees()
+      .then(r => setEmployees(r.data.data || []))
+      .catch(() => {})
+  }, [])
 
-  const filtered = mockEmployees.filter(e => {
-    const matchSearch = e.name.toLowerCase().includes(search.toLowerCase()) || e.role.toLowerCase().includes(search.toLowerCase())
+  const filtered = employees.filter((e: any) => {
+    const matchSearch = (e.name || '').toLowerCase().includes(search.toLowerCase()) || (e.role || '').toLowerCase().includes(search.toLowerCase())
     const matchDept = dept === 'All' || e.department === dept
     return matchSearch && matchDept
   })
 
-  const online = mockEmployees.filter(e => e.status === 'Online').length
-  const totalTasks = mockEmployees.reduce((s, e) => s + e.tasks, 0)
-  const avgPerf = Math.round(mockEmployees.reduce((s, e) => s + e.performance, 0) / mockEmployees.length)
+  const active = employees.filter((e: any) => e.status === 'ACTIVE').length
 
   return (
     <div className="space-y-6">
@@ -63,10 +51,10 @@ export default function HRManagement() {
       {/* Summary */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Team Size', value: mockEmployees.length, icon: Users, color: 'cyan' },
-          { label: 'Online Now', value: online, icon: Clock, color: 'emerald' },
-          { label: 'Active Tasks', value: totalTasks, icon: Briefcase, color: 'orange' },
-          { label: 'Avg Performance', value: avgPerf + '%', icon: Star, color: 'violet' },
+          { label: 'Team Size', value: employees.length, icon: Users, color: 'cyan' },
+          { label: 'Active', value: active, icon: Clock, color: 'emerald' },
+          { label: 'Departments', value: [...new Set(employees.map((e: any) => e.department))].length, icon: Briefcase, color: 'orange' },
+          { label: 'On Leave', value: employees.filter((e: any) => e.status === 'ON_LEAVE').length, icon: Star, color: 'violet' },
         ].map((c, i) => (
           <motion.div
             key={c.label}
@@ -123,9 +111,9 @@ export default function HRManagement() {
             <div className="flex items-start gap-3 mb-4">
               <div className="relative">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/20 to-violet-500/20 flex items-center justify-center text-white font-bold text-sm">
-                  {emp.avatar}
+                  {(emp.name || '??').split(' ').map((w: string) => w[0]).join('').slice(0, 2)}
                 </div>
-                <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full ${statusColors[emp.status]} border-2 border-slate-900`} />
+                <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full ${statusColors[emp.status] || 'bg-slate-500'} border-2 border-slate-900`} />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-white font-semibold text-sm truncate">{emp.name}</p>
@@ -138,35 +126,21 @@ export default function HRManagement() {
               {/* Workload */}
               <div className="flex items-center justify-between">
                 <span className="text-[11px] text-slate-500">Workload</span>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full border ${workloadColors[emp.workload]}`}>
-                  {emp.workload}
+                <span className={`text-[10px] px-2 py-0.5 rounded-full border ${workloadColors[getWorkloadLabel(emp.workload ?? 0)]}`}>
+                  {getWorkloadLabel(emp.workload ?? 0)}
                 </span>
               </div>
 
-              {/* Tasks */}
+              {/* Salary */}
               <div className="flex items-center justify-between">
-                <span className="text-[11px] text-slate-500">Active Tasks</span>
-                <span className="text-xs text-white font-medium">{emp.tasks}</span>
+                <span className="text-[11px] text-slate-500">Salary</span>
+                <span className="text-xs text-white font-medium">{emp.salary ? `$${Number(emp.salary).toLocaleString()}` : '-'}</span>
               </div>
 
-              {/* Performance bar */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[11px] text-slate-500">Performance</span>
-                  <span className="text-xs text-white font-medium">{emp.performance}%</span>
-                </div>
-                <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: emp.performance + '%' }}
-                    transition={{ delay: 0.3 + i * 0.05, duration: 0.8 }}
-                    className={`h-full rounded-full ${
-                      emp.performance >= 90 ? 'bg-gradient-to-r from-cyan-500 to-emerald-500' :
-                      emp.performance >= 80 ? 'bg-gradient-to-r from-cyan-500 to-violet-500' :
-                      'bg-gradient-to-r from-orange-500 to-rose-500'
-                    }`}
-                  />
-                </div>
+              {/* Join date */}
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-slate-500">Joined</span>
+                <span className="text-xs text-slate-400">{emp.joinDate ? new Date(emp.joinDate).toLocaleDateString() : '-'}</span>
               </div>
             </div>
           </motion.div>

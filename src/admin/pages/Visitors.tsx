@@ -1,39 +1,32 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Monitor, Smartphone, Globe, Clock, Search, ArrowUpDown } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-
-const mockVisitors = Array.from({ length: 20 }, (_, i) => ({
-  id: i + 1,
-  page: ['/', '/projects', '/contact', '/#services', '/#about', '/projects/1'][Math.floor(Math.random() * 6)],
-  date: new Date(Date.now() - Math.random() * 7 * 86400000).toLocaleDateString(),
-  time: new Date(Date.now() - Math.random() * 86400000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-  device: ['Desktop', 'Mobile', 'Tablet'][Math.floor(Math.random() * 3)],
-  country: ['Pakistan', 'USA', 'UK', 'UAE', 'Germany', 'Canada', 'India'][Math.floor(Math.random() * 7)],
-  duration: Math.floor(Math.random() * 300 + 10) + 's',
-  type: Math.random() > 0.4 ? 'New' : 'Returning',
-}))
-
-const dailyData = [
-  { day: 'Mon', visits: 420 }, { day: 'Tue', visits: 580 }, { day: 'Wed', visits: 650 },
-  { day: 'Thu', visits: 510 }, { day: 'Fri', visits: 720 }, { day: 'Sat', visits: 380 }, { day: 'Sun', visits: 290 },
-]
-
-const statCards = [
-  { label: 'Today', value: '1,284', icon: Globe, color: 'cyan' },
-  { label: 'Desktop', value: '68%', icon: Monitor, color: 'violet' },
-  { label: 'Mobile', value: '28%', icon: Smartphone, color: 'orange' },
-  { label: 'Avg Duration', value: '2m 34s', icon: Clock, color: 'emerald' },
-]
+import { getVisitors, getVisitorStats } from '../../api/adminApi'
 
 export default function Visitors() {
   const [search, setSearch] = useState('')
+  const [visitors, setVisitors] = useState<any[]>([])
+  const [stats, setStats] = useState<any>(null)
+  useEffect(() => {
+    Promise.all([
+      getVisitors().then(r => setVisitors(r.data.data || [])),
+      getVisitorStats().then(r => setStats(r.data.data)).catch(() => {}),
+    ]).catch(() => {})
+  }, [])
 
-  const filtered = mockVisitors.filter(v =>
-    v.page.toLowerCase().includes(search.toLowerCase()) ||
-    v.country.toLowerCase().includes(search.toLowerCase()) ||
-    v.device.toLowerCase().includes(search.toLowerCase())
+  const filtered = visitors.filter(v =>
+    (v.page || '').toLowerCase().includes(search.toLowerCase()) ||
+    (v.country || '').toLowerCase().includes(search.toLowerCase()) ||
+    (v.device || '').toLowerCase().includes(search.toLowerCase())
   )
+
+  const statCards = [
+    { label: 'Today', value: stats?.today ?? '-', icon: Globe, color: 'cyan' },
+    { label: 'Desktop', value: stats?.devices?.DESKTOP ?? 0, icon: Monitor, color: 'violet' },
+    { label: 'Mobile', value: stats?.devices?.MOBILE ?? 0, icon: Smartphone, color: 'orange' },
+    { label: 'This Week', value: stats?.thisWeek ?? '-', icon: Clock, color: 'emerald' },
+  ]
 
   return (
     <div className="space-y-6">
@@ -72,9 +65,16 @@ export default function Visitors() {
         transition={{ delay: 0.2 }}
         className="rounded-xl bg-slate-900/60 backdrop-blur-sm border border-white/[0.06] p-5"
       >
-        <h3 className="text-white font-semibold text-sm mb-4">Daily Visits (This Week)</h3>
+        <h3 className="text-white font-semibold text-sm mb-4">Recent Visits</h3>
         <ResponsiveContainer width="100%" height={220}>
-          <BarChart data={dailyData}>
+          <BarChart data={(() => {
+            const dayMap: Record<string, number> = {}
+            visitors.slice(0, 50).forEach((v: any) => {
+              const d = new Date(v.createdAt).toLocaleDateString('en', { weekday: 'short' })
+              dayMap[d] = (dayMap[d] || 0) + 1
+            })
+            return Object.entries(dayMap).map(([day, visits]) => ({ day, visits }))
+          })()}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
             <XAxis dataKey="day" stroke="#475569" fontSize={12} />
             <YAxis stroke="#475569" fontSize={12} />
@@ -110,7 +110,7 @@ export default function Visitors() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/[0.06]">
-                {['#', 'Page', 'Date', 'Time', 'Device', 'Country', 'Duration', 'Type'].map(h => (
+                {['#', 'Page', 'Date', 'Time', 'Device', 'Country', 'Browser', 'OS'].map(h => (
                   <th key={h} className="text-left text-[11px] font-medium text-slate-500 uppercase tracking-wider px-4 py-3">{h}</th>
                 ))}
               </tr>
@@ -125,27 +125,21 @@ export default function Visitors() {
                   className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors"
                 >
                   <td className="px-4 py-3 text-slate-500">{v.id}</td>
-                  <td className="px-4 py-3 text-cyan-400 font-mono text-xs">{v.page}</td>
-                  <td className="px-4 py-3 text-slate-300">{v.date}</td>
-                  <td className="px-4 py-3 text-slate-400">{v.time}</td>
+                  <td className="px-4 py-3 text-cyan-400 font-mono text-xs">{v.page || '/'}</td>
+                  <td className="px-4 py-3 text-slate-300">{new Date(v.createdAt).toLocaleDateString()}</td>
+                  <td className="px-4 py-3 text-slate-400">{new Date(v.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                   <td className="px-4 py-3">
                     <span className={`text-xs px-2 py-0.5 rounded-full border ${
-                      v.device === 'Desktop' ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' :
-                      v.device === 'Mobile' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
+                      v.device === 'DESKTOP' ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' :
+                      v.device === 'MOBILE' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
                       'bg-violet-500/10 text-violet-400 border-violet-500/20'
                     }`}>
                       {v.device}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-slate-300">{v.country}</td>
-                  <td className="px-4 py-3 text-slate-400">{v.duration}</td>
-                  <td className="px-4 py-3">
-                    <span className={`text-xs px-2 py-0.5 rounded-full border ${
-                      v.type === 'New' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
-                    }`}>
-                      {v.type}
-                    </span>
-                  </td>
+                  <td className="px-4 py-3 text-slate-300">{v.country || '-'}</td>
+                  <td className="px-4 py-3 text-slate-400">{v.browser || '-'}</td>
+                  <td className="px-4 py-3 text-slate-400">{v.os || '-'}</td>
                 </motion.tr>
               ))}
             </tbody>

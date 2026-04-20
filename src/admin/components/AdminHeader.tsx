@@ -31,9 +31,14 @@ export default function AdminHeader() {
           <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-cyan-500 to-violet-500 flex items-center justify-center text-white text-xs font-bold">
             {(user?.name?.[0] ?? 'A').toUpperCase()}
           </div>
-          <span className="text-sm text-white font-medium hidden sm:block">
-            {user?.name ?? 'Admin'}
-          </span>
+          <div className="hidden sm:flex flex-col items-start">
+            <span className="text-sm text-white font-medium leading-tight">
+              {user?.name ?? 'Admin'}
+            </span>
+            {(user as any)?.role && (
+              <span className="text-[10px] text-cyan-400 leading-tight">{(user as any).role}</span>
+            )}
+          </div>
           <ChevronDown size={14} className="text-slate-500" />
         </button>
       </div>

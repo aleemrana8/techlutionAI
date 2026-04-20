@@ -4,30 +4,33 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Users, UserCheck, Briefcase, DollarSign,
   FolderKanban, MessageSquare, Settings, LogOut, ChevronLeft,
-  ChevronRight, Shield, ExternalLink,
+  ChevronRight, Shield, ExternalLink, ClipboardList,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 const NAV_ITEMS = [
-  { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true },
-  { to: '/admin/visitors', icon: Users, label: 'Visitors' },
-  { to: '/admin/clients', icon: UserCheck, label: 'Clients' },
-  { to: '/admin/hr', icon: Briefcase, label: 'HR' },
-  { to: '/admin/finance', icon: DollarSign, label: 'Finance' },
-  { to: '/admin/projects', icon: FolderKanban, label: 'Projects' },
-  { to: '/admin/leads', icon: MessageSquare, label: 'Leads' },
-  { to: '/admin/settings', icon: Settings, label: 'Settings' },
+  { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true, perm: 'dashboard' },
+  { to: '/admin/visitors', icon: Users, label: 'Visitors', perm: 'visitors' },
+  { to: '/admin/clients', icon: UserCheck, label: 'Clients', perm: 'clients' },
+  { to: '/admin/hr', icon: Briefcase, label: 'HR', perm: 'employees' },
+  { to: '/admin/finance', icon: DollarSign, label: 'Finance', perm: 'finance' },
+  { to: '/admin/projects', icon: FolderKanban, label: 'Projects', perm: 'projects' },
+  { to: '/admin/leads', icon: MessageSquare, label: 'Leads', perm: 'leads' },
+  { to: '/admin/logs', icon: ClipboardList, label: 'Activity Logs', perm: 'logs' },
+  { to: '/admin/settings', icon: Settings, label: 'Settings', perm: 'settings' },
 ]
 
 export default function AdminSidebar() {
   const [collapsed, setCollapsed] = useState(false)
-  const { logout } = useAuth()
+  const { logout, hasPermission } = useAuth()
   const navigate = useNavigate()
 
   const handleLogout = () => {
     logout()
     navigate('/admin/login', { replace: true })
   }
+
+  const visibleItems = NAV_ITEMS.filter(item => hasPermission(item.perm))
 
   return (
     <motion.aside
@@ -59,7 +62,7 @@ export default function AdminSidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto scrollbar-thin">
-        {NAV_ITEMS.map(item => (
+        {visibleItems.map(item => (
           <NavLink
             key={item.to}
             to={item.to}

@@ -234,21 +234,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const systemPrompt = buildSystemPrompt(language)
   const enhancedPrompt = buildFinalPrompt({ message, intent, context, history, language })
 
-  // Gemini
+  // Gemini (try multiple models)
   if (process.env.GEMINI_API_KEY) {
-    try {
-      const { GoogleGenerativeAI } = await import('@google/generative-ai')
-      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
-      const model = genAI.getGenerativeModel({
-        model: 'gemini-2.0-flash',
-        systemInstruction: systemPrompt,
-        generationConfig: { temperature: 0.8, topP: 0.92, topK: 40, maxOutputTokens: 800 },
-      })
-      const result = await model.generateContent(enhancedPrompt)
-      const reply = result.response.text()
-      if (reply) return res.json({ success: true, data: { reply, intent, language } })
-    } catch (err: any) {
-      console.warn('Gemini error:', err.message)
+    const geminiModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.0-flash-lite']
+    const { GoogleGenerativeAI } = await import('@google/generative-ai')
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+    for (const modelName of geminiModels) {
+      try {
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          systemInstruction: systemPrompt,
+          generationConfig: { temperature: 0.8, topP: 0.92, topK: 40, maxOutputTokens: 800 },
+        })
+        const result = await model.generateContent(enhancedPrompt)
+        const reply = result.response.text()
+        if (reply) return res.json({ success: true, data: { reply, intent, language } })
+        break // got empty response, skip to fallback
+      } catch (err: any) {
+        console.warn(`Gemini ${modelName} error:`, err.message?.substring(0, 120))
+      }
     }
   }
 

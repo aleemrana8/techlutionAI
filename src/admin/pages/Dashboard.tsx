@@ -5,6 +5,9 @@ import {
   DollarSign, TrendingUp, Activity, Briefcase,
 } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { getDashboard } from '../../api/adminApi'
+import { useAdminSocket } from '../hooks/useAdminSocket'
+import { useAuth } from '../context/AuthContext'
 
 /* ─── Animated Counter ─────────────────────────────────────────────────────── */
 
@@ -81,17 +84,53 @@ const statusColors: Record<string, string> = {
 /* ─── Component ────────────────────────────────────────────────────────────── */
 
 export default function Dashboard() {
+  const [data, setData] = useState<any>(null)
+  const { user } = useAuth()
+
+  const fetchData = () => {
+    getDashboard()
+      .then((res) => setData(res.data.data))
+      .catch(() => {})
+  }
+
+  useEffect(() => { fetchData() }, [])
+
+  // Real-time updates via Socket.IO
+  useAdminSocket((event) => {
+    // Refresh dashboard on any change
+    if (event) fetchData()
+  })
+
+  const cards = data
+    ? [
+        { label: 'Total Visitors', value: data.visitors?.total ?? 0, icon: Users, color: 'cyan', change: '' },
+        { label: 'Total Leads', value: data.leads?.total ?? 0, icon: MessageSquare, color: 'violet', change: '' },
+        { label: 'Active Clients', value: data.clients?.active ?? 0, icon: UserCheck, color: 'emerald', change: '' },
+        { label: 'Active Projects', value: data.projects?.total ?? 0, icon: FolderKanban, color: 'orange', change: '' },
+        { label: 'Today Visitors', value: data.visitors?.today ?? 0, icon: Activity, color: 'rose', change: '' },
+        { label: 'Revenue (USD)', value: data.finance?.income ?? 0, icon: DollarSign, color: 'cyan', change: '' },
+        { label: 'Employees', value: data.employees?.total ?? 0, icon: Briefcase, color: 'violet', change: '' },
+        { label: 'Profit (USD)', value: data.finance?.profit ?? 0, icon: TrendingUp, color: 'emerald', change: '' },
+      ]
+    : CARDS
+
+  const leads = data?.recentLeads?.length ? data.recentLeads.map((l: any) => ({
+    name: l.name, service: l.service || l.subject || '-', time: new Date(l.createdAt).toLocaleDateString(), status: (l.status || 'new').toLowerCase(),
+  })) : recentLeads
   return (
     <div className="space-y-6">
       {/* Page Title */}
       <div>
         <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-        <p className="text-slate-400 text-sm mt-1">Welcome back — here's your business overview</p>
+        <p className="text-slate-400 text-sm mt-1">
+          Welcome back{user?.name ? `, ${user.name}` : ''} — here's your business overview
+          {user?.role && <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">{user.role}</span>}
+        </p>
       </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {CARDS.map((card, i) => {
+        {cards.map((card, i) => {
           const c = colorMap[card.color] ?? colorMap.cyan
           return (
             <motion.div
@@ -170,7 +209,7 @@ export default function Dashboard() {
         >
           <h3 className="text-white font-semibold text-sm mb-4">Recent Leads</h3>
           <div className="space-y-3">
-            {recentLeads.map((lead, i) => (
+            {leads.map((lead: any, i: number) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, x: 10 }}

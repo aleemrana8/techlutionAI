@@ -17,6 +17,7 @@ import FinanceDashboard from '../admin/pages/FinanceDashboard'
 import ProjectsBoard from '../admin/pages/ProjectsBoard'
 import Leads from '../admin/pages/Leads'
 import SettingsPage from '../admin/pages/Settings'
+import ActivityLogs from '../admin/pages/ActivityLogs'
 
 export default function AppRoutes() {
   return (
@@ -45,6 +46,7 @@ export default function AppRoutes() {
         <Route path="finance" element={<FinanceDashboard />} />
         <Route path="projects" element={<ProjectsBoard />} />
         <Route path="leads" element={<Leads />} />
+        <Route path="logs" element={<ActivityLogs />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
     </Routes>
