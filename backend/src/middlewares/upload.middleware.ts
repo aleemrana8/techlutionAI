@@ -3,11 +3,15 @@ import path from 'path'
 import fs from 'fs'
 import { Request } from 'express'
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR ?? './uploads'
+const UPLOAD_DIR = process.env.UPLOAD_DIR ?? (process.env.VERCEL ? '/tmp/uploads' : './uploads')
 
-// Ensure directory exists
-if (!fs.existsSync(UPLOAD_DIR)) {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true })
+// Ensure directory exists (use /tmp on Vercel serverless)
+try {
+  if (!fs.existsSync(UPLOAD_DIR)) {
+    fs.mkdirSync(UPLOAD_DIR, { recursive: true })
+  }
+} catch {
+  // Serverless read-only filesystem — skip
 }
 
 const storage = multer.diskStorage({
