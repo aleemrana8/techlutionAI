@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "prisma generate && (npx tsc -p backend/tsconfig.json || echo 'tsc warning - continuing') && vite build",
+    "build": "vite build",
     "preview": "vite preview",
     "postinstall": "prisma generate || true"
   },
