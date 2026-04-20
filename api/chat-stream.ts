@@ -1,7 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Techlution Bot — Vercel SSE Streaming Endpoint
+   Techlution Bot — Vercel SSE Streaming v2
+   5-step thinking, 18 services, crash-proof
    ═══════════════════════════════════════════════════════════════════════════ */
 
 const KNOWLEDGE = {

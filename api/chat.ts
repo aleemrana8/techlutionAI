@@ -1,8 +1,8 @@
 ﻿import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Techlution Bot — Vercel Serverless RAG Chat Engine
-   Vector embeddings (lazy-init), multi-language, history from frontend
+   Techlution Bot — Vercel Serverless RAG Chat Engine v2
+   5-step thinking, 18 services, crash-proof
    ═══════════════════════════════════════════════════════════════════════════ */
 
 const KNOWLEDGE = {
