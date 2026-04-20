@@ -33,15 +33,18 @@ type LeadStep = 'idle' | 'name' | 'email' | 'phone' | 'service' | 'details' | 'c
 
 const QUICK_REPLIES = [
   { label: 'Our Services', icon: Briefcase },
-  { label: 'Contact Details', icon: Phone },
+  { label: 'Healthcare IT', icon: FileText },
   { label: 'Start a Project', icon: ArrowRight },
-  { label: 'View Projects', icon: FileText },
+  { label: 'Contact Details', icon: Phone },
 ]
 
 const SERVICES_LIST = [
-  'AI & ML Solutions', 'Web Development', 'Mobile App Development',
-  'Healthcare IT', 'RCM Automation', 'AI Voice Agents',
-  'Customer Support AI', 'Automation & Integration', 'Other',
+  'AI & ML Solutions', 'Computer Vision', 'Automation & Integration',
+  'Healthcare IT', 'Web Development', 'Mobile App Development',
+  'DevOps & Cloud', 'Data Pipelines & Analytics', 'Cybersecurity',
+  'E-Commerce Solutions', 'Custom Software', 'Digital Marketing & SEO',
+  'Blockchain & Web3', 'EdTech', 'Biometrics & Identity',
+  'MVP & Startup Solutions', 'IT Consulting', 'Other',
 ]
 
 const LEAD_TRIGGERS = [
@@ -63,7 +66,7 @@ export default function Chatbot() {
     {
       id: uid(),
       role: 'bot',
-      text: "Hey there! 👋 I'm **Techlution Bot**, your AI-powered assistant.\n\nAsk me anything — whether it's about AI, technology, our services, or your next project idea. I'm here to help!",
+      text: "Hey there! 👋 I'm **Techlution Bot** — your smart AI assistant!\n\n🚀 At **Techlution AI**, we make your work:\n✅ **EASY** — automate repetitive tasks\n⚡ **FAST** — AI processes in seconds\n🧠 **SMART** — data-driven decisions\n💰 **PROFITABLE** — cut costs 40-80%\n\nAsk me anything — AI, tech, healthcare, or your next big idea!",
     },
   ])
   const [input, setInput] = useState('')
