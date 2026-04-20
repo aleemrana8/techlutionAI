@@ -6,6 +6,7 @@ import app from './app'
 import prisma from './config/database'
 import { getRedis } from './config/redis'
 import { initSocketIO } from './config/socket'
+import { initScheduler } from './config/scheduler'
 import { initEmbeddings } from './chat'
 import logger from './utils/logger'
 
@@ -25,6 +26,7 @@ async function bootstrap() {
     await initEmbeddings().catch(err => logger.warn('Embeddings init skipped:', err.message))
 
     initSocketIO(httpServer)
+    initScheduler()
 
     // Seed super admin if no admin users exist
     const adminCount = await prisma.adminUser.count()

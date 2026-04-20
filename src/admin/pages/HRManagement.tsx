@@ -32,7 +32,7 @@ export default function HRManagement() {
   const fetchEmployees = useCallback(() => {
     getEmployees()
       .then(r => setEmployees(r.data.data || []))
-      .catch(() => {})
+      .catch(err => console.error('Failed to fetch employees:', err))
   }, [])
 
   useEffect(() => { fetchEmployees() }, [fetchEmployees])

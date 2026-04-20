@@ -69,6 +69,21 @@ export const getVisitorAnalytics = () => AdminAPI.get('/analytics/visitors')
 export const getFinanceAnalytics = () => AdminAPI.get('/analytics/finance')
 export const getProjectAnalytics = () => AdminAPI.get('/analytics/projects')
 export const getHRAnalytics = () => AdminAPI.get('/analytics/hr')
+export const getAIInsights = () => AdminAPI.get('/analytics/insights')
+export const getRecommendations = () => AdminAPI.get('/analytics/recommendations')
+
+// ─── Project Finance (Cost Sharing) ──────────────────────────────────────────
+export const calculateProjectSharing = (data: any) => AdminAPI.post('/project-finance/calculate', data)
+export const getProjectFinance = (projectRef: string) => AdminAPI.get(`/project-finance/${projectRef}`)
+export const getProjectAssignments = (projectRef: string) => AdminAPI.get(`/project-finance/${projectRef}/assignments`)
+export const notifyProjectTeam = (data: any) => AdminAPI.post('/project-finance/notify', data)
+export const markSharePaid = (shareId: string) => AdminAPI.put(`/project-finance/shares/${shareId}/pay`)
+
+// ─── Reports ──────────────────────────────────────────────────────────────────
+export const downloadReport = () => AdminAPI.get('/reports/download', { responseType: 'blob' })
+export const generateReport = () => AdminAPI.post('/reports/generate')
+export const emailReport = () => AdminAPI.post('/reports/email')
+export const getEmailLogs = (params?: Record<string, string>) => AdminAPI.get('/reports/email-logs', { params })
 
 // ─── Activity Logs ────────────────────────────────────────────────────────────
 export const getActivityLogs = (params?: Record<string, string>) => AdminAPI.get('/logs', { params })

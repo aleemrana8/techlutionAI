@@ -230,3 +230,162 @@ function buildDailyTrend(dates: Date[], days: number) {
 
   return { labels, values }
 }
+
+// ─── AI Insights ──────────────────────────────────────────────────────────────
+
+export async function aiInsights(_req: AdminRequest, res: Response, next: NextFunction) {
+  try {
+    const now = new Date()
+    const thisWeekStart = new Date(now); thisWeekStart.setDate(now.getDate() - 7)
+    const lastWeekStart = new Date(now); lastWeekStart.setDate(now.getDate() - 14)
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59)
+
+    const [
+      leadsThisWeek, leadsLastWeek,
+      visitorsThisWeek, visitorsLastWeek,
+      incomeThisMonth, incomeLastMonth,
+      newLeads, convertedLeads, totalLeads,
+      totalProjects,
+      visitors,
+      employees,
+    ] = await Promise.all([
+      prisma.lead.count({ where: { createdAt: { gte: thisWeekStart } } }),
+      prisma.lead.count({ where: { createdAt: { gte: lastWeekStart, lt: thisWeekStart } } }),
+      prisma.visitor.count({ where: { createdAt: { gte: thisWeekStart } } }),
+      prisma.visitor.count({ where: { createdAt: { gte: lastWeekStart, lt: thisWeekStart } } }),
+      prisma.finance.aggregate({ where: { type: 'INCOME', date: { gte: thisMonthStart } }, _sum: { amount: true } }),
+      prisma.finance.aggregate({ where: { type: 'INCOME', date: { gte: lastMonthStart, lte: lastMonthEnd } }, _sum: { amount: true } }),
+      prisma.lead.count({ where: { status: 'NEW' } }),
+      prisma.lead.count({ where: { status: 'CLOSED' } }),
+      prisma.lead.count(),
+      prisma.project.count(),
+      prisma.visitor.findMany({ select: { device: true }, where: { createdAt: { gte: thisWeekStart } } }),
+      prisma.employee.findMany({ select: { workload: true, status: true } }),
+    ])
+
+    const insights: { text: string; type: 'growth' | 'warning' | 'info' | 'suggestion' }[] = []
+
+    // Lead trends
+    if (leadsLastWeek > 0) {
+      const pct = Math.round(((leadsThisWeek - leadsLastWeek) / leadsLastWeek) * 100)
+      if (pct > 0) insights.push({ text: `Leads increased by ${pct}% this week (${leadsThisWeek} vs ${leadsLastWeek})`, type: 'growth' })
+      else if (pct < -10) insights.push({ text: `Leads dropped by ${Math.abs(pct)}% this week — consider boosting marketing`, type: 'warning' })
+      else insights.push({ text: `Lead volume is steady this week (${leadsThisWeek} leads)`, type: 'info' })
+    } else if (leadsThisWeek > 0) {
+      insights.push({ text: `${leadsThisWeek} new leads this week — great start!`, type: 'growth' })
+    }
+
+    // Visitor trends
+    if (visitorsLastWeek > 0) {
+      const pct = Math.round(((visitorsThisWeek - visitorsLastWeek) / visitorsLastWeek) * 100)
+      if (pct > 0) insights.push({ text: `Website traffic up ${pct}% this week (${visitorsThisWeek} visitors)`, type: 'growth' })
+      else if (pct < -10) insights.push({ text: `Traffic decreased ${Math.abs(pct)}% — review SEO and marketing channels`, type: 'warning' })
+    }
+
+    // Device breakdown
+    const mobileCount = visitors.filter(v => v.device === 'MOBILE').length
+    const desktopCount = visitors.filter(v => v.device === 'DESKTOP').length
+    if (visitors.length > 0) {
+      const mobilePct = Math.round((mobileCount / visitors.length) * 100)
+      if (mobilePct > 60) insights.push({ text: `${mobilePct}% of traffic is mobile — ensure mobile-first experience`, type: 'info' })
+      else if (desktopCount > mobileCount) insights.push({ text: `Desktop dominates traffic (${100 - mobilePct}%) — optimize desktop conversion`, type: 'info' })
+    }
+
+    // Revenue
+    const income = incomeThisMonth._sum.amount ?? 0
+    const lastIncome = incomeLastMonth._sum.amount ?? 0
+    if (lastIncome > 0) {
+      const pct = Math.round(((income - lastIncome) / lastIncome) * 100)
+      if (pct > 0) insights.push({ text: `Revenue grew ${pct}% compared to last month ($${income.toLocaleString()})`, type: 'growth' })
+      else if (pct < 0) insights.push({ text: `Revenue declined ${Math.abs(pct)}% vs last month — review pipeline`, type: 'warning' })
+    } else if (income > 0) {
+      insights.push({ text: `$${income.toLocaleString()} in revenue this month`, type: 'growth' })
+    }
+
+    // Conversion rate
+    if (totalLeads > 0) {
+      const rate = Math.round((convertedLeads / totalLeads) * 100)
+      if (rate > 30) insights.push({ text: `Strong conversion rate at ${rate}% — keep it up!`, type: 'growth' })
+      else if (rate < 10 && totalLeads > 5) insights.push({ text: `Conversion rate is ${rate}% — consider follow-up automation`, type: 'suggestion' })
+    }
+
+    // Pending leads
+    if (newLeads > 5) insights.push({ text: `${newLeads} leads pending follow-up — prioritize outreach`, type: 'warning' })
+
+    // Team workload
+    const overloaded = employees.filter(e => e.workload > 80).length
+    if (overloaded > 0) insights.push({ text: `${overloaded} team member${overloaded > 1 ? 's' : ''} over 80% workload — consider redistribution`, type: 'warning' })
+
+    // Projects
+    if (totalProjects > 0) insights.push({ text: `${totalProjects} active projects in pipeline`, type: 'info' })
+
+    // Suggestion
+    if (insights.length < 3) {
+      insights.push({ text: 'Keep data flowing — more data means smarter insights', type: 'suggestion' })
+    }
+
+    sendSuccess(res, { insights })
+  } catch (err) { next(err) }
+}
+
+// ─── AI Recommendations ─────────────────────────────────────────────────────
+
+export async function recommendations(_req: AdminRequest, res: Response, next: NextFunction) {
+  try {
+    const now = new Date()
+    const weekAgo = new Date(now); weekAgo.setDate(now.getDate() - 7)
+
+    const [
+      newLeads, totalLeads, convertedLeads,
+      overloaded, pendingShares,
+      weekIncome, weekExpense,
+      totalProjects,
+    ] = await Promise.all([
+      prisma.lead.count({ where: { status: 'NEW' } }),
+      prisma.lead.count(),
+      prisma.lead.count({ where: { status: 'CLOSED' } }),
+      prisma.employee.findMany({ where: { workload: { gt: 80 } }, select: { name: true, workload: true } }),
+      prisma.projectShare.count({ where: { paymentStatus: 'PENDING' } }),
+      prisma.finance.aggregate({ where: { type: 'INCOME', date: { gte: weekAgo } }, _sum: { amount: true } }),
+      prisma.finance.aggregate({ where: { type: 'EXPENSE', date: { gte: weekAgo } }, _sum: { amount: true } }),
+      prisma.project.count({ where: { status: { not: 'COMPLETED' } } }),
+    ])
+
+    const recs: { priority: 'high' | 'medium' | 'low'; type: string; message: string; action?: string; route?: string }[] = []
+
+    if (newLeads > 0) {
+      recs.push({ priority: newLeads > 5 ? 'high' : 'medium', type: 'leads', message: `Follow up on ${newLeads} pending leads`, action: 'View Leads', route: '/admin/leads' })
+    }
+
+    for (const emp of overloaded) {
+      recs.push({ priority: 'high', type: 'workload', message: `${emp.name} is at ${emp.workload}% workload — consider redistributing`, action: 'View Team', route: '/admin/team' })
+    }
+
+    const income = weekIncome._sum.amount ?? 0
+    const expense = weekExpense._sum.amount ?? 0
+    if (expense > income && income > 0) {
+      recs.push({ priority: 'high', type: 'finance', message: `Weekly expenses ($${expense.toLocaleString()}) exceed income ($${income.toLocaleString()})`, action: 'View Finance', route: '/admin/finance' })
+    }
+
+    if (pendingShares > 0) {
+      recs.push({ priority: 'medium', type: 'payouts', message: `${pendingShares} share payouts pending — review and mark as paid`, action: 'View Projects', route: '/admin/projects' })
+    }
+
+    const convRate = totalLeads > 0 ? Math.round((convertedLeads / totalLeads) * 100) : 0
+    if (convRate < 15 && totalLeads > 10) {
+      recs.push({ priority: 'medium', type: 'conversion', message: `Lead conversion rate is ${convRate}% — review follow-up strategy`, action: 'View Analytics', route: '/admin/analytics' })
+    }
+
+    if (totalProjects > 5) {
+      recs.push({ priority: 'low', type: 'projects', message: `${totalProjects} active projects in pipeline`, action: 'View Projects', route: '/admin/projects' })
+    }
+
+    if (recs.length === 0) {
+      recs.push({ priority: 'low', type: 'info', message: 'All metrics look healthy — great job!' })
+    }
+
+    sendSuccess(res, { recommendations: recs })
+  } catch (err) { next(err) }
+}

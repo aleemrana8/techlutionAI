@@ -267,7 +267,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Send metadata
   res.write('data: ' + JSON.stringify({ type: 'meta', intent, language }) + '\n\n')
 
-  // Gemini streaming
+  // --- Try OpenAI streaming first (gpt-4o-mini — fast, reliable) ---
+  if (process.env.OPENAI_API_KEY) {
+    try {
+      const OpenAI = (await import('openai')).default
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+      const stream = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: enhancedPrompt }],
+        max_tokens: 1024,
+        temperature: 0.7,
+        stream: true,
+      })
+      let hasContent = false
+      for await (const chunk of stream) {
+        const text = chunk.choices[0]?.delta?.content
+        if (text) {
+          hasContent = true
+          res.write('data: ' + JSON.stringify({ type: 'chunk', text }) + '\n\n')
+        }
+      }
+      if (hasContent) {
+        res.write('data: [DONE]\n\n')
+        res.end()
+        return
+      }
+    } catch (err: any) {
+      console.warn('OpenAI stream error:', err.message?.substring(0, 300))
+    }
+  }
+
+  // --- Fallback: Gemini streaming ---
   if (process.env.GEMINI_API_KEY) {
     try {
       const geminiModels = ['gemini-2.0-flash', 'gemini-2.0-flash-lite']

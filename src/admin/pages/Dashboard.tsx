@@ -7,6 +7,9 @@ import {
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { getDashboard, getDashboardTrends } from '../../api/adminApi'
 import { useDashboardSocket } from '../hooks/useSocket'
+import { useTheme } from '../context/ThemeContext'
+import AIInsights from '../components/AIInsights'
+import Recommendations from '../components/Recommendations'
 
 /* ─── Animated Counter ─────────────────────────────────────────────────────── */
 
@@ -85,17 +88,18 @@ const statusColors: Record<string, string> = {
 export default function Dashboard() {
   const [data, setData] = useState<any>(null)
   const [chartData, setChartData] = useState<any[]>(fallbackChartData)
+  const { isDark } = useTheme()
 
   const fetchData = useCallback(() => {
     getDashboard()
       .then((res) => setData(res.data.data))
-      .catch(() => {})
+      .catch(err => console.error('Failed to load dashboard:', err))
     getDashboardTrends()
       .then((res) => {
         const trends = res.data.data
         if (Array.isArray(trends) && trends.length > 0) setChartData(trends)
       })
-      .catch(() => {})
+      .catch(err => console.error('Failed to load dashboard trends:', err))
   }, [])
 
   useEffect(() => { fetchData() }, [fetchData])
@@ -123,8 +127,8 @@ export default function Dashboard() {
     <div className="space-y-6">
       {/* Page Title */}
       <div>
-        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-        <p className="text-slate-400 text-sm mt-1">Welcome back — here's your business overview</p>
+        <h1 className="text-2xl font-bold text-white dark:text-white text-slate-900">Dashboard</h1>
+        <p className="text-slate-400 dark:text-slate-400 text-slate-500 text-sm mt-1">Welcome back — here's your business overview</p>
       </div>
 
       {/* Summary Cards */}
@@ -138,12 +142,12 @@ export default function Dashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05, duration: 0.4 }}
               whileHover={{ scale: 1.02, y: -2 }}
-              className={`relative rounded-xl bg-slate-900/60 backdrop-blur-sm border border-white/[0.06] p-5 shadow-lg ${c.glow} overflow-hidden group`}
+              className={`relative rounded-xl bg-slate-900/60 dark:bg-slate-900/60 bg-white backdrop-blur-sm border border-white/[0.06] dark:border-white/[0.06] border-slate-200 p-5 shadow-lg ${c.glow} overflow-hidden group transition-colors duration-300`}
             >
               <div className={`absolute top-0 right-0 w-24 h-24 rounded-full bg-gradient-to-br ${c.bg} blur-2xl opacity-50 group-hover:opacity-80 transition-opacity -translate-y-8 translate-x-8`} />
               <div className="relative">
                 <div className="flex items-center justify-between mb-3">
-                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${c.bg} border border-white/[0.06] flex items-center justify-center`}>
+                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${c.bg} border border-white/[0.06] dark:border-white/[0.06] border-slate-200 flex items-center justify-center`}>
                     <card.icon size={18} className={c.text} />
                   </div>
                   {card.change && (
@@ -152,12 +156,12 @@ export default function Dashboard() {
                     </span>
                   )}
                 </div>
-                <p className="text-2xl font-bold text-white">
+                <p className="text-2xl font-bold text-white dark:text-white text-slate-900">
                   {card.label.includes('USD') && '$'}
                   <AnimatedCounter value={card.value} />
                   {card.label === 'Growth Rate' && '%'}
                 </p>
-                <p className="text-xs text-slate-500 mt-1">{card.label}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-500 text-slate-400 mt-1">{card.label}</p>
               </div>
             </motion.div>
           )
@@ -171,9 +175,9 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="lg:col-span-2 rounded-xl bg-slate-900/60 backdrop-blur-sm border border-white/[0.06] p-5"
+          className="lg:col-span-2 rounded-xl bg-slate-900/60 dark:bg-slate-900/60 bg-white backdrop-blur-sm border border-white/[0.06] dark:border-white/[0.06] border-slate-200 p-5 transition-colors duration-300"
         >
-          <h3 className="text-white font-semibold text-sm mb-4">Visitor & Inquiry Trends</h3>
+          <h3 className="text-white dark:text-white text-slate-900 font-semibold text-sm mb-4">Visitor & Inquiry Trends</h3>
           <ResponsiveContainer width="100%" height={280}>
             <AreaChart data={chartData}>
               <defs>
@@ -186,12 +190,18 @@ export default function Dashboard() {
                   <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-              <XAxis dataKey="name" stroke="#475569" fontSize={12} />
-              <YAxis stroke="#475569" fontSize={12} />
+              <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.06)'} />
+              <XAxis dataKey="name" stroke={isDark ? '#475569' : '#94a3b8'} fontSize={12} />
+              <YAxis stroke={isDark ? '#475569' : '#94a3b8'} fontSize={12} />
               <Tooltip
-                contentStyle={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', fontSize: 12 }}
-                labelStyle={{ color: '#e2e8f0' }}
+                contentStyle={{
+                  background: isDark ? '#0f172a' : '#ffffff',
+                  border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.1)',
+                  borderRadius: '12px',
+                  fontSize: 12,
+                  color: isDark ? '#e2e8f0' : '#1e293b',
+                }}
+                labelStyle={{ color: isDark ? '#e2e8f0' : '#1e293b' }}
               />
               <Area type="monotone" dataKey="visitors" stroke="#06b6d4" fill="url(#colorVisitors)" strokeWidth={2} />
               <Area type="monotone" dataKey="leads" stroke="#8b5cf6" fill="url(#colorLeads)" strokeWidth={2} />
@@ -199,14 +209,20 @@ export default function Dashboard() {
           </ResponsiveContainer>
         </motion.div>
 
+        {/* AI Insights */}
+        <AIInsights />
+
+        {/* AI Recommendations */}
+        <Recommendations />
+
         {/* Recent Leads */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="rounded-xl bg-slate-900/60 backdrop-blur-sm border border-white/[0.06] p-5"
+          className="rounded-xl bg-slate-900/60 dark:bg-slate-900/60 bg-white backdrop-blur-sm border border-white/[0.06] dark:border-white/[0.06] border-slate-200 p-5 transition-colors duration-300"
         >
-          <h3 className="text-white font-semibold text-sm mb-4">Recent Inquiries</h3>
+          <h3 className="text-white dark:text-white text-slate-900 font-semibold text-sm mb-4">Recent Inquiries</h3>
           <div className="space-y-3">
             {leads.map((lead: any, i: number) => (
               <motion.div
@@ -214,14 +230,14 @@ export default function Dashboard() {
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.5 + i * 0.05 }}
-                className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-white/[0.03] transition-colors"
+                className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-white/[0.03] dark:hover:bg-white/[0.03] hover:bg-slate-50 transition-colors"
               >
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500/20 to-violet-500/20 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500/20 to-violet-500/20 flex items-center justify-center text-white dark:text-white text-cyan-700 text-xs font-bold flex-shrink-0">
                   {lead.name[0]}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-white font-medium truncate">{lead.name}</p>
-                  <p className="text-[11px] text-slate-500">{lead.service} • {lead.time}</p>
+                  <p className="text-sm text-white dark:text-white text-slate-900 font-medium truncate">{lead.name}</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-500 text-slate-400">{lead.service} • {lead.time}</p>
                 </div>
                 <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${statusColors[lead.status]}`}>
                   {lead.status}

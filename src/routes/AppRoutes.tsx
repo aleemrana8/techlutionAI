@@ -20,6 +20,7 @@ import SettingsPage from '../admin/pages/Settings'
 import Analytics from '../admin/pages/Analytics'
 import ActivityLogs from '../admin/pages/ActivityLogs'
 import AdminUsers from '../admin/pages/AdminUsers'
+import Reports from '../admin/pages/Reports'
 
 export default function AppRoutes() {
   return (
@@ -51,6 +52,7 @@ export default function AppRoutes() {
         <Route path="analytics" element={<Analytics />} />
         <Route path="logs" element={<ActivityLogs />} />
         <Route path="users" element={<AdminUsers />} />
+        <Route path="reports" element={<Reports />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
     </Routes>

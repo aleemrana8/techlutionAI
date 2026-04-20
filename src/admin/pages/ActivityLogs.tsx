@@ -28,7 +28,7 @@ export default function ActivityLogs() {
         setLogs(r.data.data?.logs || r.data.data || [])
         setTotal(r.data.data?.total || 0)
       })
-      .catch(() => {})
+      .catch(err => console.error('Failed to load activity logs:', err))
   }, [page, search])
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize))

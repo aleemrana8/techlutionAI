@@ -320,7 +320,7 @@ export default function Chatbot() {
       return
     }
 
-    // Normal AI chat — use streaming
+    // Normal AI chat — use streaming with POST fallback
     setLoading(true)
 
     // Create placeholder bot message for streaming
@@ -356,20 +356,29 @@ export default function Chatbot() {
           return prev
         })
       },
-      // onError — fallback to non-streaming
+      // onError — fallback to non-streaming POST
       async () => {
         setStreaming(false)
         try {
           const res = await sendChatMessage(msg, sessionId, buildHistory())
-          const reply = res.data.data?.reply ?? res.data.reply ?? 'Sorry, I could not generate a response.'
-          setMessages(prev =>
-            prev.map(m => m.id === botMsgId ? { ...m, text: reply } : m)
-          )
-          speakText(reply)
+          const reply = res.data.data?.reply ?? res.data.reply ?? ''
+          if (reply && reply.trim().length > 0) {
+            setMessages(prev =>
+              prev.map(m => m.id === botMsgId ? { ...m, text: reply } : m)
+            )
+            speakText(reply)
+          } else {
+            setMessages(prev =>
+              prev.map(m => m.id === botMsgId
+                ? { ...m, text: "I'm having a brief connectivity issue. Please try again in a moment, or reach us directly at **raleem811811@gmail.com** | **+92 315 1664843** 🚀" }
+                : m
+              )
+            )
+          }
         } catch {
           setMessages(prev =>
             prev.map(m => m.id === botMsgId
-              ? { ...m, text: "Sorry, I couldn't connect right now. Please try again or contact us at **raleem811811@gmail.com**." }
+              ? { ...m, text: "I'm having a brief connectivity issue. Please try again in a moment, or reach us directly at **raleem811811@gmail.com** | **+92 315 1664843** 🚀" }
               : m
             )
           )

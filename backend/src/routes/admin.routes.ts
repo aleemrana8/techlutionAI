@@ -8,6 +8,8 @@ import * as employeeCtrl from '../controllers/employee.controller'
 import * as financeCtrl from '../controllers/finance.controller'
 import * as analyticsCtrl from '../controllers/analytics.controller'
 import * as adminUserCtrl from '../controllers/adminUser.controller'
+import * as pfCtrl from '../controllers/projectFinance.controller'
+import * as reportCtrl from '../controllers/report.controller'
 
 const router = Router()
 
@@ -75,5 +77,20 @@ router.get('/analytics/visitors', requirePermission('analytics'), analyticsCtrl.
 router.get('/analytics/finance', requirePermission('analytics'), analyticsCtrl.financeAnalytics)
 router.get('/analytics/projects', requirePermission('analytics'), analyticsCtrl.projectAnalytics)
 router.get('/analytics/hr', requirePermission('analytics'), analyticsCtrl.hrAnalytics)
+router.get('/analytics/insights', analyticsCtrl.aiInsights)
+router.get('/analytics/recommendations', analyticsCtrl.recommendations)
+
+// ─── Project Finance (Cost Sharing) ──────────────────────────────────────────
+router.post('/project-finance/calculate', requirePermission('finance', 'write'), pfCtrl.calculate)
+router.get('/project-finance/:projectRef', requirePermission('finance', 'read'), pfCtrl.getFinance)
+router.get('/project-finance/:projectRef/assignments', requirePermission('finance', 'read'), pfCtrl.getAssignments)
+router.post('/project-finance/notify', requirePermission('finance', 'write'), pfCtrl.notifyTeam)
+router.put('/project-finance/shares/:shareId/pay', requirePermission('finance', 'write'), pfCtrl.markPaid)
+
+// ─── Reports ─────────────────────────────────────────────────────────────────
+router.get('/reports/download', reportCtrl.downloadReport)
+router.post('/reports/generate', reportCtrl.generateReport)
+router.post('/reports/email', reportCtrl.emailReport)
+router.get('/reports/email-logs', reportCtrl.getEmailLogs)
 
 export default router

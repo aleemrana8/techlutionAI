@@ -23,7 +23,7 @@ export default function FinanceDashboard() {
     Promise.all([
       getFinanceSummary().then(r => setSummary(r.data.data)),
       getFinanceRecords().then(r => setRecords(r.data.data || [])),
-    ]).catch(() => {})
+    ]).catch(err => console.error('Failed to load finance data:', err))
   }, [])
 
   useEffect(() => { fetchData() }, [fetchData])

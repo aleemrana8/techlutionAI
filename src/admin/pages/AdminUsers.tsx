@@ -35,7 +35,7 @@ export default function AdminUsers() {
   const fetchUsers = () => {
     getAdminUsers()
       .then(r => setUsers(r.data.data || []))
-      .catch(() => {})
+      .catch(err => console.error('Failed to fetch admin users:', err))
   }
 
   useEffect(() => { fetchUsers() }, [])

@@ -151,7 +151,7 @@ app.get('/api/admin/verify', async (req, res) => {
     try {
       const dbUser = await prisma.adminUser.findUnique({ where: { id: payload.sub }, select: { id: true, name: true, username: true, email: true, role: true } })
       if (dbUser) user = dbUser
-    } catch {}
+    } catch { /* env-based admin fallback — DB user optional */ }
     res.json({ success: true, data: { user, permissions: ROLE_PERMISSIONS[role as keyof typeof ROLE_PERMISSIONS] } })
   } catch { res.status(401).json({ success: false, message: 'Invalid or expired token' }) }
 })
@@ -171,7 +171,7 @@ app.post('/api/visitor', async (req, res) => {
       },
     })
     // Socket.IO emit (skip in serverless)
-    try { const { emitDashboardEvent } = await import('./config/socket'); emitDashboardEvent('visitor:new', { id: visitor.id, page, device }) } catch {}
+    try { const { emitDashboardEvent } = await import('./config/socket'); emitDashboardEvent('visitor:new', { id: visitor.id, page, device }) } catch { /* socket optional in serverless */ }
     res.status(201).json({ success: true, data: { id: visitor.id } })
   } catch { res.status(500).json({ success: false, message: 'Failed to log visitor' }) }
 })
@@ -195,6 +195,27 @@ app.post('/api/chat', async (req, res) => {
     const systemPrompt = buildSystemPrompt(language)
     const enhancedPrompt = buildFinalPrompt({ message, intent, context, history, language })
 
+    // --- Try OpenAI first (gpt-4o-mini — fast, smart, reliable) ---
+    if (process.env.OPENAI_API_KEY) {
+      try {
+        const OpenAI = (await import('openai')).default
+        const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+        const completion = await openai.chat.completions.create({
+          model: 'gpt-4o-mini',
+          messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: enhancedPrompt }],
+          max_tokens: 1024,
+          temperature: 0.7,
+        })
+        const reply = completion.choices[0]?.message?.content ?? ''
+        if (reply && reply.trim().length > 5) {
+          addMemory(sid, message, reply)
+          res.json({ success: true, data: { reply, intent, language } })
+          return
+        }
+      } catch (err: any) { logger.warn('OpenAI error:', err?.message?.substring(0, 300) || err) }
+    }
+
+    // --- Fallback: Try Gemini ---
     if (process.env.GEMINI_API_KEY) {
       const geminiModels = ['gemini-2.0-flash', 'gemini-2.0-flash-lite']
       try {
@@ -210,24 +231,12 @@ app.post('/api/chat', async (req, res) => {
             const result = await model.generateContent(enhancedPrompt)
             const reply = result.response.text()
             if (reply && reply.trim().length > 5) { addMemory(sid, message, reply); res.json({ success: true, data: { reply, intent, language } }); return }
-            logger.warn(`Gemini ${modelName}: empty response`)
           } catch (err: any) { logger.warn(`Gemini ${modelName} error:`, err?.message?.substring(0, 200) || err) }
         }
       } catch (err: any) { logger.warn('Gemini import error:', err?.message?.substring(0, 200) || err) }
-    } else {
-      logger.warn('GEMINI_API_KEY not set — skipping Gemini')
     }
 
-  if (process.env.OPENAI_API_KEY) {
-    try {
-      const OpenAI = (await import('openai')).default
-      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-      const completion = await openai.chat.completions.create({ model: 'gpt-3.5-turbo', messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: enhancedPrompt }], max_tokens: 800, temperature: 0.8 })
-      const reply = completion.choices[0]?.message?.content ?? ''
-      if (reply) { addMemory(sid, message, reply); res.json({ success: true, data: { reply, intent, language } }); return }
-    } catch (err: any) { logger.warn('OpenAI unavailable:', err.message) }
-  }
-
+    // --- Last resort: Smart fallback ---
     const reply = getSmartFallback(message)
     addMemory(sid, message, reply)
     res.json({ success: true, data: { reply, intent, language } })
@@ -266,7 +275,28 @@ app.get('/api/chat-stream', async (req, res) => {
 
   let fullReply = ''
 
-  if (process.env.GEMINI_API_KEY) {
+  // --- Try OpenAI first (gpt-4o-mini streaming — fast & smart) ---
+  if (process.env.OPENAI_API_KEY && !fullReply) {
+    try {
+      const OpenAI = (await import('openai')).default
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+      const stream = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: enhancedPrompt }],
+        max_tokens: 1024,
+        temperature: 0.7,
+        stream: true,
+      })
+      for await (const chunk of stream) {
+        const text = chunk.choices[0]?.delta?.content ?? ''
+        if (text) { fullReply += text; res.write('data: ' + JSON.stringify({ type: 'chunk', text }) + '\n\n') }
+      }
+      if (fullReply) { addMemory(sid, message, fullReply); res.write('data: [DONE]\n\n'); res.end(); return }
+    } catch (err: any) { logger.warn('OpenAI stream error:', err?.message?.substring(0, 300) || err) }
+  }
+
+  // --- Fallback: Try Gemini streaming ---
+  if (process.env.GEMINI_API_KEY && !fullReply) {
     try {
       const geminiModels = ['gemini-2.0-flash', 'gemini-2.0-flash-lite']
       const { GoogleGenerativeAI } = await import('@google/generative-ai')
@@ -289,19 +319,7 @@ app.get('/api/chat-stream', async (req, res) => {
     } catch (err: any) { logger.warn('Gemini import error:', err?.message?.substring(0, 200) || err) }
   }
 
-  if (process.env.OPENAI_API_KEY && !fullReply) {
-    try {
-      const OpenAI = (await import('openai')).default
-      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-      const stream = await openai.chat.completions.create({ model: 'gpt-3.5-turbo', messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: enhancedPrompt }], max_tokens: 800, temperature: 0.8, stream: true })
-      for await (const chunk of stream) {
-        const text = chunk.choices[0]?.delta?.content ?? ''
-        if (text) { fullReply += text; res.write('data: ' + JSON.stringify({ type: 'chunk', text }) + '\n\n') }
-      }
-      if (fullReply) { addMemory(sid, message, fullReply); res.write('data: [DONE]\n\n'); res.end(); return }
-    } catch (err: any) { logger.warn('OpenAI stream error:', err.message) }
-  }
-
+  // --- Last resort: Smart fallback with simulated streaming ---
   if (!fullReply) {
     const fallback = getSmartFallback(message)
     addMemory(sid, message, fallback)

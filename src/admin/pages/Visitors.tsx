@@ -13,8 +13,8 @@ export default function Visitors() {
   const fetchData = useCallback(() => {
     Promise.all([
       getVisitors().then(r => setVisitors(r.data.data || [])),
-      getVisitorStats().then(r => setStats(r.data.data)).catch(() => {}),
-    ]).catch(() => {})
+      getVisitorStats().then(r => setStats(r.data.data)).catch(err => console.error('Failed to load visitor stats:', err)),
+    ]).catch(err => console.error('Failed to load visitors:', err))
   }, [])
 
   useEffect(() => { fetchData() }, [fetchData])

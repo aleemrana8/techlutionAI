@@ -46,26 +46,56 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AuthState>({
-    token: localStorage.getItem('admin_token'),
-    user: null,
-    permissions: null,
-    isAuthenticated: false,
-    loading: true,
+  const [state, setState] = useState<AuthState>(() => {
+    const token = localStorage.getItem('admin_token')
+    const savedUser = localStorage.getItem('admin_user')
+    const savedPerms = localStorage.getItem('admin_permissions')
+    // Restore session from localStorage immediately (no verify call needed)
+    if (token && savedUser) {
+      try {
+        return {
+          token,
+          user: JSON.parse(savedUser),
+          permissions: savedPerms ? JSON.parse(savedPerms) : null,
+          isAuthenticated: true,
+          loading: false,
+        }
+      } catch { /* corrupted storage — fall through */ }
+    }
+    return { token, user: null, permissions: null, isAuthenticated: false, loading: !token ? false : true }
   })
 
   const logout = useCallback(() => {
     localStorage.removeItem('admin_token')
+    localStorage.removeItem('admin_user')
+    localStorage.removeItem('admin_permissions')
     setState({ token: null, user: null, permissions: null, isAuthenticated: false, loading: false })
     // Disconnect socket on logout
     import('../hooks/useSocket').then(m => m.disconnectSocket()).catch(() => {})
   }, [])
 
-  // Verify stored token on mount
+  // Verify stored token on mount (only if not already restored from cache)
   useEffect(() => {
     const token = localStorage.getItem('admin_token')
     if (!token) {
       setState(s => ({ ...s, loading: false }))
+      return
+    }
+    // If already authenticated from localStorage, just background-verify
+    if (state.isAuthenticated && state.user) {
+      // Silent background verify — don't block UI
+      API.get('/admin/verify', { headers: { Authorization: `Bearer ${token}` } })
+        .then(res => {
+          const user = res.data.data?.user ?? state.user
+          const permissions = res.data.data?.permissions ?? state.permissions
+          localStorage.setItem('admin_user', JSON.stringify(user))
+          if (permissions) localStorage.setItem('admin_permissions', JSON.stringify(permissions))
+          setState(s => ({ ...s, user, permissions }))
+        })
+        .catch(() => {
+          // Token expired on server — force logout
+          logout()
+        })
       return
     }
     API.get('/admin/verify', { headers: { Authorization: `Bearer ${token}` } })
@@ -94,6 +124,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     const { token, user, permissions } = res.data.data
     localStorage.setItem('admin_token', token)
+    localStorage.setItem('admin_user', JSON.stringify(user))
+    if (permissions) localStorage.setItem('admin_permissions', JSON.stringify(permissions))
     setState({ token, user, permissions: permissions ?? null, isAuthenticated: true, loading: false })
   }
 

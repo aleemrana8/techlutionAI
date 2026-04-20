@@ -30,7 +30,7 @@ export default function Clients() {
   const fetchClients = useCallback(() => {
     getClients()
       .then(r => setClients(r.data.data || []))
-      .catch(() => {})
+      .catch(err => console.error('Failed to load clients:', err))
   }, [])
 
   useEffect(() => { fetchClients() }, [fetchClients])

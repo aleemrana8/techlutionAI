@@ -2,25 +2,43 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Shield, Bell, Palette, Globe, Save, Loader2, Check } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 
 export default function SettingsPage() {
   const { user } = useAuth()
+  const { isDark } = useTheme()
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
 
   const handleSave = () => {
     setSaving(true)
+    // Persist settings to localStorage
+    const form = document.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[data-setting]')
+    const settings: Record<string, any> = {}
+    form.forEach(el => {
+      if (el instanceof HTMLInputElement && el.type === 'checkbox') settings[el.dataset.setting!] = el.checked
+      else settings[el.dataset.setting!] = el.value
+    })
+    localStorage.setItem('admin_settings', JSON.stringify(settings))
     setTimeout(() => {
       setSaving(false)
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
-    }, 800)
+    }, 400)
   }
+
+  const cardClass = isDark
+    ? 'bg-slate-900/60 backdrop-blur-sm border-white/[0.06]'
+    : 'bg-white border-slate-200 shadow-sm'
+  const textPrimary = isDark ? 'text-white' : 'text-slate-900'
+  const inputClass = isDark
+    ? 'bg-white/[0.04] border-white/[0.06] text-white placeholder-slate-600'
+    : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400'
 
   return (
     <div className="space-y-6 max-w-3xl">
       <div>
-        <h1 className="text-2xl font-bold text-white">Settings</h1>
+        <h1 className={`text-2xl font-bold ${textPrimary}`}>Settings</h1>
         <p className="text-slate-400 text-sm mt-1">Manage your admin panel preferences</p>
       </div>
 
@@ -28,18 +46,18 @@ export default function SettingsPage() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-xl bg-slate-900/60 backdrop-blur-sm border border-white/[0.06] p-6"
+        className={`rounded-xl border p-6 ${cardClass}`}
       >
         <div className="flex items-center gap-3 mb-5">
           <Shield size={18} className="text-cyan-400" />
-          <h2 className="text-white font-semibold text-sm">Profile</h2>
+          <h2 className={`font-semibold text-sm ${textPrimary}`}>Profile</h2>
         </div>
         <div className="flex items-center gap-4 mb-6">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-violet-500 flex items-center justify-center text-white text-2xl font-bold">
             {(user?.name?.[0] ?? 'A').toUpperCase()}
           </div>
           <div>
-            <p className="text-white font-semibold">{user?.name ?? 'Administrator'}</p>
+            <p className={`font-semibold ${textPrimary}`}>{user?.name ?? 'Administrator'}</p>
             <p className="text-slate-400 text-sm">Super Admin</p>
             <p className="text-slate-500 text-xs mt-0.5">Last login: {new Date().toLocaleString()}</p>
           </div>
@@ -49,16 +67,20 @@ export default function SettingsPage() {
             <label className="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wider">Display Name</label>
             <input
               type="text"
+              data-setting="displayName"
               defaultValue={user?.name ?? 'Administrator'}
-              className="w-full bg-white/[0.04] border border-white/[0.06] text-white text-sm rounded-xl px-4 py-2.5 placeholder-slate-600 focus:outline-none focus:border-cyan-500/30 transition-all"
+              className={`w-full ${inputClass} border text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-cyan-500/30 transition-all`}
             />
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wider">Email</label>
             <input
               type="email"
+              data-setting="email"
               defaultValue="raleem811811@gmail.com"
-              className="w-full bg-white/[0.04] border border-white/[0.06] text-white text-sm rounded-xl px-4 py-2.5 placeholder-slate-600 focus:outline-none focus:border-cyan-500/30 transition-all"
+              className={`w-full ${inputClass} border text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-cyan-500/30 transition-all`}
+              defaultValue="raleem811811@gmail.com"
+              className={`w-full ${inputClass} border text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-cyan-500/30 transition-all`}
             />
           </div>
         </div>
@@ -69,11 +91,11 @@ export default function SettingsPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="rounded-xl bg-slate-900/60 backdrop-blur-sm border border-white/[0.06] p-6"
+        className={`rounded-xl border p-6 ${cardClass}`}
       >
         <div className="flex items-center gap-3 mb-5">
           <Bell size={18} className="text-violet-400" />
-          <h2 className="text-white font-semibold text-sm">Notifications</h2>
+          <h2 className={`font-semibold text-sm ${textPrimary}`}>Notifications</h2>
         </div>
         <div className="space-y-4">
           {[
@@ -84,7 +106,7 @@ export default function SettingsPage() {
           ].map(item => (
             <div key={item.label} className="flex items-center justify-between">
               <div>
-                <p className="text-white text-sm">{item.label}</p>
+                <p className={`text-sm ${textPrimary}`}>{item.label}</p>
                 <p className="text-slate-500 text-xs">{item.desc}</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
@@ -101,25 +123,25 @@ export default function SettingsPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="rounded-xl bg-slate-900/60 backdrop-blur-sm border border-white/[0.06] p-6"
+        className={`rounded-xl border p-6 ${cardClass}`}
       >
         <div className="flex items-center gap-3 mb-5">
           <Palette size={18} className="text-orange-400" />
-          <h2 className="text-white font-semibold text-sm">Appearance</h2>
+          <h2 className={`font-semibold text-sm ${textPrimary}`}>Appearance</h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wider">Theme</label>
-            <select className="w-full bg-white/[0.04] border border-white/[0.06] text-slate-300 text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-cyan-500/30 transition-all cursor-pointer appearance-none">
-              <option className="bg-slate-900">Dark (Default)</option>
-              <option className="bg-slate-900">System</option>
+            <select data-setting="theme" className={`w-full ${inputClass} border text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-cyan-500/30 transition-all cursor-pointer appearance-none`}>
+              <option value="dark">Dark (Default)</option>
+              <option value="system">System</option>
             </select>
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wider">Accent Color</label>
             <div className="flex gap-2 mt-1">
               {['#06b6d4', '#8b5cf6', '#f97316', '#10b981', '#f43f5e'].map(c => (
-                <button key={c} className="w-8 h-8 rounded-lg border-2 border-transparent hover:border-white/30 transition-all" style={{ background: c }} />
+                <button key={c} className={`w-8 h-8 rounded-lg border-2 border-transparent transition-all ${isDark ? 'hover:border-white/30' : 'hover:border-slate-400'}`} style={{ background: c }} />
               ))}
             </div>
           </div>
@@ -131,27 +153,27 @@ export default function SettingsPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="rounded-xl bg-slate-900/60 backdrop-blur-sm border border-white/[0.06] p-6"
+        className={`rounded-xl border p-6 ${cardClass}`}
       >
         <div className="flex items-center gap-3 mb-5">
           <Globe size={18} className="text-emerald-400" />
-          <h2 className="text-white font-semibold text-sm">Regional</h2>
+          <h2 className={`font-semibold text-sm ${textPrimary}`}>Regional</h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wider">Timezone</label>
-            <select className="w-full bg-white/[0.04] border border-white/[0.06] text-slate-300 text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-cyan-500/30 transition-all cursor-pointer appearance-none">
-              <option className="bg-slate-900">Asia/Karachi (PKT)</option>
-              <option className="bg-slate-900">UTC</option>
-              <option className="bg-slate-900">America/New_York (EST)</option>
+            <select data-setting="timezone" className={`w-full ${inputClass} border text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-cyan-500/30 transition-all cursor-pointer appearance-none`}>
+              <option value="Asia/Karachi">Asia/Karachi (PKT)</option>
+              <option value="UTC">UTC</option>
+              <option value="America/New_York">America/New_York (EST)</option>
             </select>
           </div>
           <div>
             <label className="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wider">Currency</label>
-            <select className="w-full bg-white/[0.04] border border-white/[0.06] text-slate-300 text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-cyan-500/30 transition-all cursor-pointer appearance-none">
-              <option className="bg-slate-900">USD ($)</option>
-              <option className="bg-slate-900">PKR (₨)</option>
-              <option className="bg-slate-900">EUR (€)</option>
+            <select data-setting="currency" className={`w-full ${inputClass} border text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-cyan-500/30 transition-all cursor-pointer appearance-none`}>
+              <option value="USD">USD ($)</option>
+              <option value="PKR">PKR (₨)</option>
+              <option value="EUR">EUR (€)</option>
             </select>
           </div>
         </div>

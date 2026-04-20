@@ -269,10 +269,13 @@ model Employee {
   status     EmployeeStatus @default(ACTIVE)
   workload   Int            @default(0)
   salary     Float?
+  isFounder  Boolean        @default(false)
   joinDate   DateTime       @default(now())
   notes      String?
   createdAt  DateTime       @default(now())
   updatedAt  DateTime       @updatedAt
+  assignments ProjectAssignment[]
+  shares      ProjectShare[]
 
   @@map("employees")
 }
@@ -335,6 +338,93 @@ model AnalyticsSnapshot {
 
   @@index([metric, date])
   @@map("analytics_snapshots")
+}
+
+// ─── Project Assignment ─────────────────────────────────────────────────────
+
+model ProjectAssignment {
+  id           String   @id @default(cuid())
+  projectRef   String
+  employeeId   String
+  roleInProject String?
+  assignedAt   DateTime @default(now())
+  employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([projectRef, employeeId])
+  @@index([projectRef])
+  @@index([employeeId])
+  @@map("project_assignments")
+}
+
+// ─── Project Finance (Cost Sharing) ─────────────────────────────────────────
+
+model ProjectFinance {
+  id              String   @id @default(cuid())
+  projectRef      String   @unique
+  totalAmount     Float
+  fiverrFeePercent Float   @default(0)
+  zakatEnabled    Boolean  @default(false)
+  zakatPercent    Float    @default(2.5)
+  otherCosts      Json     @default("[]")
+  totalDeductions Float    @default(0)
+  netAmount       Float    @default(0)
+  sharePerPerson  Float    @default(0)
+  totalMembers    Int      @default(0)
+  founderIncluded Boolean  @default(true)
+  calculatedAt    DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  shares          ProjectShare[]
+
+  @@index([projectRef])
+  @@map("project_finances")
+}
+
+// ─── Project Share Distribution ─────────────────────────────────────────────
+
+model ProjectShare {
+  id             String        @id @default(cuid())
+  projectFinanceId String
+  employeeId     String
+  shareAmount    Float
+  paymentStatus  PaymentStatus @default(PENDING)
+  notified       Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  projectFinance ProjectFinance @relation(fields: [projectFinanceId], references: [id], onDelete: Cascade)
+  employee       Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([projectFinanceId, employeeId])
+  @@index([projectFinanceId])
+  @@index([employeeId])
+  @@map("project_shares")
+}
+
+// ─── Email Log ──────────────────────────────────────────────────────────────
+
+model EmailLog {
+  id         String      @id @default(cuid())
+  to         String
+  subject    String
+  type       String
+  projectRef String?
+  status     EmailStatus @default(SENT)
+  error      String?
+  createdAt  DateTime    @default(now())
+
+  @@index([type])
+  @@index([createdAt])
+  @@map("email_logs")
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+}
+
+enum EmailStatus {
+  SENT
+  FAILED
 }
 
 enum Role {

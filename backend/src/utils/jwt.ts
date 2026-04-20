@@ -10,7 +10,7 @@ export interface JwtPayload {
 
 export function signAccessToken(payload: Omit<JwtPayload, 'iat' | 'exp'>): string {
   const secret = (process.env.JWT_SECRET ?? '').trim()
-  const expiresIn = (process.env.JWT_EXPIRES_IN ?? '7d').trim() as string & { __brand: 'StringValue' }
+  const expiresIn = (process.env.JWT_EXPIRES_IN ?? '30d').trim() as string & { __brand: 'StringValue' }
   return jwt.sign(payload, secret, { expiresIn } as SignOptions)
 }
 
