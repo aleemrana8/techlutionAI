@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Search, Eye, Check, MessageSquare, Mail, Phone } from 'lucide-react'
 import { getLeads } from '../../api/adminApi'
+import { useDashboardSocket } from '../hooks/useSocket'
 
 type LeadStatus = 'New' | 'Contacted' | 'Qualified' | 'Converted' | 'Closed'
 
@@ -20,11 +21,18 @@ export default function Leads() {
   const [statusFilter, setStatusFilter] = useState<LeadStatus | 'All'>('All')
   const [expandedId, setExpandedId] = useState<number | null>(null)
   const [leads, setLeads] = useState<any[]>([])
-  useEffect(() => {
+
+  const fetchLeads = useCallback(() => {
     getLeads()
       .then(r => setLeads(r.data.data || []))
       .catch(() => {})
   }, [])
+
+  useEffect(() => { fetchLeads() }, [fetchLeads])
+
+  useDashboardSocket((event) => {
+    if (event === 'lead:new' || event === 'lead:update') fetchLeads()
+  })
 
   const filtered = leads.filter((l: any) => {
     const matchSearch = (l.name || '').toLowerCase().includes(search.toLowerCase()) ||

@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { DollarSign, TrendingUp, TrendingDown, CreditCard, FileText, ArrowUpRight, ArrowDownRight } from 'lucide-react'
 import { PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts'
 import { getFinanceSummary, getFinanceRecords } from '../../api/adminApi'
+import { useDashboardSocket } from '../hooks/useSocket'
 
 const pieColors = ['#06b6d4', '#8b5cf6', '#f97316', '#10b981', '#64748b', '#f43f5e']
 
@@ -17,12 +18,19 @@ const statusColors: Record<string, string> = {
 export default function FinanceDashboard() {
   const [summary, setSummary] = useState<any>(null)
   const [records, setRecords] = useState<any[]>([])
-  useEffect(() => {
+
+  const fetchData = useCallback(() => {
     Promise.all([
       getFinanceSummary().then(r => setSummary(r.data.data)),
       getFinanceRecords().then(r => setRecords(r.data.data || [])),
     ]).catch(() => {})
   }, [])
+
+  useEffect(() => { fetchData() }, [fetchData])
+
+  useDashboardSocket((event) => {
+    if (event === 'finance:new' || event === 'finance:update') fetchData()
+  })
 
   const totalIncome = summary?.totalIncome ?? 0
   const totalExpenses = summary?.totalExpenses ?? 0

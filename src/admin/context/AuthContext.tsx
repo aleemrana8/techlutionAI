@@ -57,6 +57,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     localStorage.removeItem('admin_token')
     setState({ token: null, user: null, permissions: null, isAuthenticated: false, loading: false })
+    // Disconnect socket on logout
+    import('../hooks/useSocket').then(m => m.disconnectSocket()).catch(() => {})
   }, [])
 
   // Verify stored token on mount

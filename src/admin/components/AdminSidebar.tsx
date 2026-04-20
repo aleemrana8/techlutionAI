@@ -1,23 +1,25 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Users, UserCheck, Briefcase, DollarSign,
   FolderKanban, MessageSquare, Settings, LogOut, ChevronLeft,
-  ChevronRight, Shield, ExternalLink, ScrollText,
+  ChevronRight, Shield, ExternalLink, BarChart3, Activity, UserCog,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 const NAV_ITEMS = [
-  { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true, permission: 'dashboard' },
-  { to: '/admin/visitors', icon: Users, label: 'Visitors', permission: 'visitors' },
-  { to: '/admin/clients', icon: UserCheck, label: 'Clients', permission: 'clients' },
-  { to: '/admin/hr', icon: Briefcase, label: 'HR', permission: 'employees' },
-  { to: '/admin/finance', icon: DollarSign, label: 'Finance', permission: 'finance' },
-  { to: '/admin/projects', icon: FolderKanban, label: 'Projects', permission: 'projects' },
-  { to: '/admin/leads', icon: MessageSquare, label: 'Leads', permission: 'leads' },
-  { to: '/admin/logs', icon: ScrollText, label: 'Activity Logs', permission: 'logs' },
-  { to: '/admin/settings', icon: Settings, label: 'Settings', permission: 'settings' },
+  { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true, permission: 'dashboard' as const },
+  { to: '/admin/visitors', icon: Users, label: 'Visitors', permission: 'visitors' as const },
+  { to: '/admin/clients', icon: UserCheck, label: 'Clients', permission: 'clients' as const },
+  { to: '/admin/leads', icon: MessageSquare, label: 'Leads', permission: 'leads' as const },
+  { to: '/admin/hr', icon: Briefcase, label: 'HR', permission: 'employees' as const },
+  { to: '/admin/finance', icon: DollarSign, label: 'Finance', permission: 'finance' as const },
+  { to: '/admin/projects', icon: FolderKanban, label: 'Projects', permission: 'projects' as const },
+  { to: '/admin/analytics', icon: BarChart3, label: 'Analytics', permission: 'analytics' as const },
+  { to: '/admin/logs', icon: Activity, label: 'Activity Logs', permission: 'logs' as const },
+  { to: '/admin/users', icon: UserCog, label: 'Admin Users', permission: 'adminUsers' as const },
+  { to: '/admin/settings', icon: Settings, label: 'Settings', permission: 'settings' as const },
 ]
 
 export default function AdminSidebar() {
@@ -25,7 +27,10 @@ export default function AdminSidebar() {
   const { logout, hasPermission } = useAuth()
   const navigate = useNavigate()
 
-  const visibleItems = NAV_ITEMS.filter(item => hasPermission(item.permission))
+  const filteredItems = useMemo(
+    () => NAV_ITEMS.filter(item => hasPermission(item.permission, 'read')),
+    [hasPermission]
+  )
 
   const handleLogout = () => {
     logout()
@@ -62,7 +67,7 @@ export default function AdminSidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto scrollbar-thin">
-        {visibleItems.map(item => (
+        {filteredItems.map(item => (
           <NavLink
             key={item.to}
             to={item.to}

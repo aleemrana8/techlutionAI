@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,7 +7,330 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ─── Enums ───────────────────────────────────────────────────────────────────
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  password     String
+  name         String
+  role         Role      @default(CLIENT)
+  isActive     Boolean   @default(true)
+  refreshToken String?
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  agents       Agent[]
+  projects     Project[]
+
+  @@map("users")
+}
+
+model Project {
+  id               String          @id @default(cuid())
+  title            String
+  slug             String          @unique
+  shortDescription String
+  fullDescription  String
+  category         ProjectCategory
+  features         String[]
+  workflowSteps    Json[]
+  benefits         String[]
+  images           String[]
+  status           ProjectStatus   @default(DRAFT)
+  tags             String[]
+  techStack        String[]
+  durationWeeks    Int?
+  createdById      String
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  files            File[]
+  createdBy        User            @relation(fields: [createdById], references: [id])
+
+  @@map("projects")
+}
+
+model Lead {
+  id        String     @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  company   String?
+  service   String?
+  message   String
+  status    LeadStatus @default(NEW)
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@map("leads")
+}
+
+model Agent {
+  id          String     @id @default(cuid())
+  name        String
+  type        AgentType
+  description String?
+  config      Json       @default("{}")
+  isActive    Boolean    @default(true)
+  userId      String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  user        User       @relation(fields: [userId], references: [id])
+  workflows   Workflow[]
+
+  @@map("agents")
+}
+
+model Patient {
+  id                  String        @id @default(cuid())
+  firstName           String
+  lastName            String
+  dateOfBirth         DateTime
+  gender              String
+  phone               String?
+  email               String?
+  address             String?
+  city                String?
+  state               String?
+  zipCode             String?
+  medicalRecordNumber String        @unique
+  insuranceId         String?
+  insuranceProvider   String?
+  groupNumber         String?
+  memberId            String?
+  notes               String?
+  isActive            Boolean       @default(true)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  appointments        Appointment[]
+  billings            Billing[]
+
+  @@map("patients")
+}
+
+model Appointment {
+  id              String            @id @default(cuid())
+  patientId       String
+  appointmentDate DateTime
+  appointmentTime String
+  type            String
+  provider        String?
+  location        String?
+  status          AppointmentStatus @default(SCHEDULED)
+  reasonForVisit  String?
+  notes           String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  patient         Patient           @relation(fields: [patientId], references: [id])
+  billings        Billing[]
+
+  @@map("appointments")
+}
+
+model Billing {
+  id               String        @id @default(cuid())
+  patientId        String
+  appointmentId    String?
+  dateOfService    DateTime
+  chargeAmount     Float
+  paidAmount       Float         @default(0)
+  adjustmentAmount Float         @default(0)
+  balanceDue       Float
+  status           BillingStatus @default(PENDING)
+  icdCodes         String[]
+  cptCodes         String[]
+  insuranceId      String?
+  claimNumber      String?
+  eobReceived      Boolean       @default(false)
+  eobDate          DateTime?
+  notes            String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  appointment      Appointment?  @relation(fields: [appointmentId], references: [id])
+  patient          Patient       @relation(fields: [patientId], references: [id])
+  denials          Denial[]
+
+  @@map("billings")
+}
+
+model Denial {
+  id          String       @id @default(cuid())
+  billingId   String
+  denialCode  String
+  reason      String
+  denialDate  DateTime
+  status      DenialStatus @default(OPEN)
+  appealNotes String?
+  resolvedAt  DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  billing     Billing      @relation(fields: [billingId], references: [id])
+
+  @@map("denials")
+}
+
+model Workflow {
+  id          String          @id @default(cuid())
+  name        String
+  description String?
+  trigger     WorkflowTrigger @default(MANUAL)
+  steps       Json[]
+  status      WorkflowStatus  @default(ACTIVE)
+  agentId     String?
+  webhookUrl  String?
+  schedule    String?
+  lastRunAt   DateTime?
+  runCount    Int             @default(0)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  logs        WorkflowLog[]
+  agent       Agent?          @relation(fields: [agentId], references: [id])
+
+  @@map("workflows")
+}
+
+model WorkflowLog {
+  id          String   @id @default(cuid())
+  workflowId  String
+  status      String
+  input       Json?
+  output      Json?
+  error       String?
+  durationMs  Int?
+  triggeredBy String?
+  createdAt   DateTime @default(now())
+  workflow    Workflow @relation(fields: [workflowId], references: [id])
+
+  @@map("workflow_logs")
+}
+
+model File {
+  id           String   @id @default(cuid())
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  url          String
+  storagePath  String
+  entityType   String?
+  entityId     String?
+  projectId    String?
+  uploadedAt   DateTime @default(now())
+  project      Project? @relation(fields: [projectId], references: [id])
+
+  @@map("files")
+}
+
+model Visitor {
+  id        String        @id @default(cuid())
+  ipAddress String?
+  device    VisitorDevice @default(OTHER)
+  browser   String?
+  os        String?
+  page      String?
+  referrer  String?
+  country   String?
+  city      String?
+  sessionId String?
+  createdAt DateTime      @default(now())
+
+  @@map("visitors")
+}
+
+model Client {
+  id        String       @id @default(cuid())
+  name      String
+  email     String       @unique
+  phone     String?
+  company   String?
+  industry  String?
+  status    ClientStatus @default(PROSPECT)
+  notes     String?
+  projects  Int          @default(0)
+  revenue   Float        @default(0)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@map("clients")
+}
+
+model Employee {
+  id         String         @id @default(cuid())
+  name       String
+  email      String         @unique
+  phone      String?
+  role       String
+  department String
+  status     EmployeeStatus @default(ACTIVE)
+  workload   Int            @default(0)
+  salary     Float?
+  joinDate   DateTime       @default(now())
+  notes      String?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@map("employees")
+}
+
+model Finance {
+  id          String      @id @default(cuid())
+  type        FinanceType
+  amount      Float
+  description String
+  category    String?
+  projectRef  String?
+  date        DateTime    @default(now())
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@map("finances")
+}
+
+model AdminUser {
+  id           String        @id @default(cuid())
+  username     String        @unique
+  email        String        @unique
+  passwordHash String
+  name         String
+  role         AdminRole     @default(SUPPORT)
+  isActive     Boolean       @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  logs         ActivityLog[]
+
+  @@map("admin_users")
+}
+
+model ActivityLog {
+  id          String     @id @default(cuid())
+  action      String
+  entity      String?
+  entityId    String?
+  details     String?
+  ipAddress   String?
+  userAgent   String?
+  adminUserId String?
+  createdAt   DateTime   @default(now())
+  adminUser   AdminUser? @relation(fields: [adminUserId], references: [id])
+
+  @@index([adminUserId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
+
+model AnalyticsSnapshot {
+  id        String   @id @default(cuid())
+  date      DateTime @default(now())
+  metric    String
+  value     Float
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([metric, date])
+  @@map("analytics_snapshots")
+}
 
 enum Role {
   ADMIN
@@ -88,237 +408,6 @@ enum AgentType {
   CUSTOM
 }
 
-// ─── Models ───────────────────────────────────────────────────────────────────
-
-model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  password     String
-  name         String
-  role         Role      @default(CLIENT)
-  isActive     Boolean   @default(true)
-  refreshToken String?
-  lastLoginAt  DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-
-  projects  Project[]
-  agents    Agent[]
-
-  @@map("users")
-}
-
-model Project {
-  id               String          @id @default(cuid())
-  title            String
-  slug             String          @unique
-  shortDescription String
-  fullDescription  String
-  category         ProjectCategory
-  features         String[]
-  workflowSteps    Json[]          // { step: number, title: string, description: string }
-  benefits         String[]
-  images           String[]
-  status           ProjectStatus   @default(DRAFT)
-  tags             String[]
-  techStack        String[]
-  durationWeeks    Int?
-  createdById      String
-  createdBy        User            @relation(fields: [createdById], references: [id])
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
-
-  files File[]
-
-  @@map("projects")
-}
-
-model Lead {
-  id        String     @id @default(cuid())
-  name      String
-  email     String
-  phone     String?
-  company   String?
-  service   String?
-  message   String
-  status    LeadStatus @default(NEW)
-  ipAddress String?
-  userAgent String?
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-
-  @@map("leads")
-}
-
-model Agent {
-  id          String    @id @default(cuid())
-  name        String
-  type        AgentType
-  description String?
-  config      Json      @default("{}")
-  isActive    Boolean   @default(true)
-  userId      String
-  user        User      @relation(fields: [userId], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  workflows Workflow[]
-
-  @@map("agents")
-}
-
-// ─── Healthcare Module ────────────────────────────────────────────────────────
-
-model Patient {
-  id                  String   @id @default(cuid())
-  firstName           String
-  lastName            String
-  dateOfBirth         DateTime
-  gender              String
-  phone               String?
-  email               String?
-  address             String?
-  city                String?
-  state               String?
-  zipCode             String?
-  medicalRecordNumber String   @unique
-  insuranceId         String?
-  insuranceProvider   String?
-  groupNumber         String?
-  memberId            String?
-  notes               String?
-  isActive            Boolean  @default(true)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-
-  appointments Appointment[]
-  billings     Billing[]
-
-  @@map("patients")
-}
-
-model Appointment {
-  id            String            @id @default(cuid())
-  patientId     String
-  patient       Patient           @relation(fields: [patientId], references: [id])
-  appointmentDate DateTime
-  appointmentTime String
-  type          String
-  provider      String?
-  location      String?
-  status        AppointmentStatus @default(SCHEDULED)
-  reasonForVisit String?
-  notes         String?
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
-
-  billings Billing[]
-
-  @@map("appointments")
-}
-
-model Billing {
-  id              String        @id @default(cuid())
-  patientId       String
-  patient         Patient       @relation(fields: [patientId], references: [id])
-  appointmentId   String?
-  appointment     Appointment?  @relation(fields: [appointmentId], references: [id])
-  dateOfService   DateTime
-  chargeAmount    Float
-  paidAmount      Float         @default(0)
-  adjustmentAmount Float        @default(0)
-  balanceDue      Float
-  status          BillingStatus @default(PENDING)
-  icdCodes        String[]
-  cptCodes        String[]
-  insuranceId     String?
-  claimNumber     String?
-  eobReceived     Boolean       @default(false)
-  eobDate         DateTime?
-  notes           String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  denials Denial[]
-
-  @@map("billings")
-}
-
-model Denial {
-  id          String       @id @default(cuid())
-  billingId   String
-  billing     Billing      @relation(fields: [billingId], references: [id])
-  denialCode  String
-  reason      String
-  denialDate  DateTime
-  status      DenialStatus @default(OPEN)
-  appealNotes String?
-  resolvedAt  DateTime?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-
-  @@map("denials")
-}
-
-// ─── Automation Module ────────────────────────────────────────────────────────
-
-model Workflow {
-  id          String          @id @default(cuid())
-  name        String
-  description String?
-  trigger     WorkflowTrigger @default(MANUAL)
-  steps       Json[]          // { order: number, type: string, config: object }
-  status      WorkflowStatus  @default(ACTIVE)
-  agentId     String?
-  agent       Agent?          @relation(fields: [agentId], references: [id])
-  webhookUrl  String?
-  schedule    String?         // cron expression
-  lastRunAt   DateTime?
-  runCount    Int             @default(0)
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-
-  logs WorkflowLog[]
-
-  @@map("workflows")
-}
-
-model WorkflowLog {
-  id         String   @id @default(cuid())
-  workflowId String
-  workflow   Workflow @relation(fields: [workflowId], references: [id])
-  status     String   // SUCCESS | FAILED | RUNNING
-  input      Json?
-  output     Json?
-  error      String?
-  durationMs Int?
-  triggeredBy String?
-  createdAt  DateTime @default(now())
-
-  @@map("workflow_logs")
-}
-
-// ─── File Storage ─────────────────────────────────────────────────────────────
-
-model File {
-  id         String   @id @default(cuid())
-  filename   String
-  originalName String
-  mimeType   String
-  size       Int
-  url        String
-  storagePath String
-  entityType String?  // "project" | "patient" etc.
-  entityId   String?
-  projectId  String?
-  project    Project? @relation(fields: [projectId], references: [id])
-  uploadedAt DateTime @default(now())
-
-  @@map("files")
-}
-
-// ─── Admin Panel Models ───────────────────────────────────────────────────────
-
 enum VisitorDevice {
   DESKTOP
   MOBILE
@@ -343,73 +432,6 @@ enum FinanceType {
   EXPENSE
 }
 
-model Visitor {
-  id        String        @id @default(cuid())
-  ipAddress String?
-  device    VisitorDevice @default(OTHER)
-  browser   String?
-  os        String?
-  page      String?
-  referrer  String?
-  country   String?
-  city      String?
-  sessionId String?
-  createdAt DateTime      @default(now())
-
-  @@map("visitors")
-}
-
-model Client {
-  id        String       @id @default(cuid())
-  name      String
-  email     String       @unique
-  phone     String?
-  company   String?
-  industry  String?
-  status    ClientStatus @default(PROSPECT)
-  notes     String?
-  projects  Int          @default(0)
-  revenue   Float        @default(0)
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-
-  @@map("clients")
-}
-
-model Employee {
-  id         String         @id @default(cuid())
-  name       String
-  email      String         @unique
-  phone      String?
-  role       String
-  department String
-  status     EmployeeStatus @default(ACTIVE)
-  workload   Int            @default(0)
-  salary     Float?
-  joinDate   DateTime       @default(now())
-  notes      String?
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
-
-  @@map("employees")
-}
-
-model Finance {
-  id          String      @id @default(cuid())
-  type        FinanceType
-  amount      Float
-  description String
-  category    String?
-  projectRef  String?
-  date        DateTime    @default(now())
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-
-  @@map("finances")
-}
-
-// ─── RBAC ─────────────────────────────────────────────────────────────────────
-
 enum AdminRole {
   SUPER_ADMIN
   ADMIN
@@ -417,50 +439,4 @@ enum AdminRole {
   FINANCE
   MANAGER
   SUPPORT
-}
-
-model AdminUser {
-  id           String    @id @default(cuid())
-  username     String    @unique
-  email        String    @unique
-  passwordHash String
-  name         String
-  role         AdminRole @default(SUPPORT)
-  isActive     Boolean   @default(true)
-  lastLoginAt  DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  logs         ActivityLog[]
-
-  @@map("admin_users")
-}
-
-model ActivityLog {
-  id          String    @id @default(cuid())
-  action      String
-  entity      String?
-  entityId    String?
-  details     String?
-  ipAddress   String?
-  userAgent   String?
-  adminUserId String?
-  adminUser   AdminUser? @relation(fields: [adminUserId], references: [id], onDelete: SetNull)
-  createdAt   DateTime  @default(now())
-
-  @@index([adminUserId])
-  @@index([action])
-  @@index([createdAt])
-  @@map("activity_logs")
-}
-
-model AnalyticsSnapshot {
-  id        String   @id @default(cuid())
-  date      DateTime @default(now())
-  metric    String
-  value     Float
-  metadata  Json?
-  createdAt DateTime @default(now())
-
-  @@index([metric, date])
-  @@map("analytics_snapshots")
 }

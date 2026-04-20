@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Search, Filter, Eye, MoreHorizontal } from 'lucide-react'
 import { getClients } from '../../api/adminApi'
+import { useDashboardSocket } from '../hooks/useSocket'
 
 type Status = 'ACTIVE' | 'INACTIVE' | 'PROSPECT' | 'CHURNED'
 
@@ -25,11 +26,18 @@ export default function Clients() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<Status | 'All'>('All')
   const [clients, setClients] = useState<any[]>([])
-  useEffect(() => {
+
+  const fetchClients = useCallback(() => {
     getClients()
       .then(r => setClients(r.data.data || []))
       .catch(() => {})
   }, [])
+
+  useEffect(() => { fetchClients() }, [fetchClients])
+
+  useDashboardSocket((event) => {
+    if (event === 'client:new' || event === 'client:update') fetchClients()
+  })
 
   const filtered = clients.filter((c: any) => {
     const matchSearch = (c.name || '').toLowerCase().includes(search.toLowerCase()) ||

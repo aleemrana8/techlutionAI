@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Search, Users, Briefcase, Clock, Star, ChevronDown } from 'lucide-react'
 import { getEmployees } from '../../api/adminApi'
+import { useDashboardSocket } from '../hooks/useSocket'
 
 const statusColors: Record<string, string> = {
   ACTIVE: 'bg-emerald-400',
@@ -27,11 +28,18 @@ export default function HRManagement() {
   const [search, setSearch] = useState('')
   const [dept, setDept] = useState('All')
   const [employees, setEmployees] = useState<any[]>([])
-  useEffect(() => {
+
+  const fetchEmployees = useCallback(() => {
     getEmployees()
       .then(r => setEmployees(r.data.data || []))
       .catch(() => {})
   }, [])
+
+  useEffect(() => { fetchEmployees() }, [fetchEmployees])
+
+  useDashboardSocket((event) => {
+    if (event === 'employee:new' || event === 'employee:update') fetchEmployees()
+  })
 
   const filtered = employees.filter((e: any) => {
     const matchSearch = (e.name || '').toLowerCase().includes(search.toLowerCase()) || (e.role || '').toLowerCase().includes(search.toLowerCase())

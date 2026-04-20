@@ -1,19 +1,27 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Monitor, Smartphone, Globe, Clock, Search, ArrowUpDown } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { getVisitors, getVisitorStats } from '../../api/adminApi'
+import { useDashboardSocket } from '../hooks/useSocket'
 
 export default function Visitors() {
   const [search, setSearch] = useState('')
   const [visitors, setVisitors] = useState<any[]>([])
   const [stats, setStats] = useState<any>(null)
-  useEffect(() => {
+
+  const fetchData = useCallback(() => {
     Promise.all([
       getVisitors().then(r => setVisitors(r.data.data || [])),
       getVisitorStats().then(r => setStats(r.data.data)).catch(() => {}),
     ]).catch(() => {})
   }, [])
+
+  useEffect(() => { fetchData() }, [fetchData])
+
+  useDashboardSocket((event) => {
+    if (event === 'visitor:new') fetchData()
+  })
 
   const filtered = visitors.filter(v =>
     (v.page || '').toLowerCase().includes(search.toLowerCase()) ||

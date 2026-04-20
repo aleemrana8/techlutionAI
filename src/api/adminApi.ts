@@ -61,4 +61,21 @@ export const createFinanceRecord = (data: any) => AdminAPI.post('/finance', data
 export const updateFinanceRecord = (id: string, data: any) => AdminAPI.put(`/finance/${id}`, data)
 export const deleteFinanceRecord = (id: string) => AdminAPI.delete(`/finance/${id}`)
 
+// ─── Analytics ────────────────────────────────────────────────────────────────
+export const getAnalyticsOverview = () => AdminAPI.get('/analytics/overview')
+export const getLeadAnalytics = () => AdminAPI.get('/analytics/leads')
+export const getVisitorAnalytics = () => AdminAPI.get('/analytics/visitors')
+export const getFinanceAnalytics = () => AdminAPI.get('/analytics/finance')
+export const getProjectAnalytics = () => AdminAPI.get('/analytics/projects')
+export const getHRAnalytics = () => AdminAPI.get('/analytics/hr')
+
+// ─── Activity Logs ────────────────────────────────────────────────────────────
+export const getActivityLogs = (params?: Record<string, string>) => AdminAPI.get('/logs', { params })
+
+// ─── Admin Users ──────────────────────────────────────────────────────────────
+export const getAdminUsers = () => AdminAPI.get('/users')
+export const createAdminUser = (data: any) => AdminAPI.post('/users', data)
+export const updateAdminUser = (id: string, data: any) => AdminAPI.put(`/users/${id}`, data)
+export const deleteAdminUser = (id: string) => AdminAPI.delete(`/users/${id}`)
+
 export default AdminAPI

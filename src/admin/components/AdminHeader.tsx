@@ -1,8 +1,43 @@
-import { Bell, Search, ChevronDown } from 'lucide-react'
+import { Bell, Search, ChevronDown, Wifi, WifiOff } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { useSocket } from '../hooks/useSocket'
+import { useState, useEffect } from 'react'
+
+const ROLE_LABELS: Record<string, string> = {
+  SUPER_ADMIN: 'Super Admin',
+  ADMIN: 'Admin',
+  HR: 'HR Manager',
+  FINANCE: 'Finance',
+  MANAGER: 'Manager',
+  SUPPORT: 'Support',
+}
+
+const ROLE_COLORS: Record<string, string> = {
+  SUPER_ADMIN: 'from-cyan-500 to-violet-500',
+  ADMIN: 'from-cyan-500 to-blue-500',
+  HR: 'from-emerald-500 to-teal-500',
+  FINANCE: 'from-amber-500 to-orange-500',
+  MANAGER: 'from-violet-500 to-purple-500',
+  SUPPORT: 'from-slate-400 to-slate-500',
+}
 
 export default function AdminHeader() {
   const { user } = useAuth()
+  const socket = useSocket()
+  const [connected, setConnected] = useState(false)
+
+  useEffect(() => {
+    if (!socket) return
+    const onConnect = () => setConnected(true)
+    const onDisconnect = () => setConnected(false)
+    socket.on('connect', onConnect)
+    socket.on('disconnect', onDisconnect)
+    setConnected(socket.connected)
+    return () => { socket.off('connect', onConnect); socket.off('disconnect', onDisconnect) }
+  }, [socket])
+
+  const role = (user as any)?.role || 'ADMIN'
+  const gradient = ROLE_COLORS[role] || ROLE_COLORS.ADMIN
 
   return (
     <header className="h-16 bg-slate-950/60 backdrop-blur-xl border-b border-white/[0.06] flex items-center justify-between px-6 sticky top-0 z-30">
@@ -18,28 +53,31 @@ export default function AdminHeader() {
 
       {/* Right section */}
       <div className="flex items-center gap-4 ml-auto">
+        {/* Live indicator */}
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.03] border border-white/[0.06]">
+          {connected
+            ? <><Wifi size={12} className="text-emerald-400" /><span className="text-[10px] text-emerald-400 font-medium">Live</span></>
+            : <><WifiOff size={12} className="text-slate-500" /><span className="text-[10px] text-slate-500 font-medium">Offline</span></>
+          }
+        </div>
+
         {/* Notifications */}
         <button className="relative w-9 h-9 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/[0.08] transition-all">
           <Bell size={16} />
-          <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-[9px] text-white font-bold flex items-center justify-center border-2 border-slate-950">
-            3
-          </span>
         </button>
 
         {/* Profile */}
         <button className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] transition-all">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-cyan-500 to-violet-500 flex items-center justify-center text-white text-xs font-bold">
+          <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${gradient} flex items-center justify-center text-white text-xs font-bold`}>
             {(user?.name?.[0] ?? 'A').toUpperCase()}
           </div>
           <div className="hidden sm:block text-left">
             <span className="text-sm text-white font-medium block leading-tight">
               {user?.name ?? 'Admin'}
             </span>
-            {user?.role && (
-              <span className="text-[10px] text-cyan-400/70 leading-none">
-                {user.role.replace('_', ' ')}
-              </span>
-            )}
+            <span className="text-[10px] text-slate-500 leading-none">
+              {ROLE_LABELS[role] || role}
+            </span>
           </div>
           <ChevronDown size={14} className="text-slate-500" />
         </button>

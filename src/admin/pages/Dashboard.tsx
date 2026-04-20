@@ -6,7 +6,7 @@ import {
 } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { getDashboard } from '../../api/adminApi'
-import { useSocket } from '../hooks/useSocket'
+import { useDashboardSocket } from '../hooks/useSocket'
 
 /* ─── Animated Counter ─────────────────────────────────────────────────────── */
 
@@ -84,7 +84,6 @@ const statusColors: Record<string, string> = {
 
 export default function Dashboard() {
   const [data, setData] = useState<any>(null)
-  const { subscribe } = useSocket()
 
   const fetchData = useCallback(() => {
     getDashboard()
@@ -92,19 +91,10 @@ export default function Dashboard() {
       .catch(() => {})
   }, [])
 
-  useEffect(() => {
-    fetchData()
-    // Real-time: refresh dashboard on any new data event
-    const unsubs = [
-      subscribe('lead:new', fetchData),
-      subscribe('client:new', fetchData),
-      subscribe('visitor:new', fetchData),
-      subscribe('finance:new', fetchData),
-      subscribe('employee:new', fetchData),
-      subscribe('dashboard:refresh', fetchData),
-    ]
-    return () => unsubs.forEach(u => u())
-  }, [fetchData, subscribe])
+  useEffect(() => { fetchData() }, [fetchData])
+
+  // Real-time: refetch dashboard on any socket event
+  useDashboardSocket(() => { fetchData() })
 
   const cards = data
     ? [
