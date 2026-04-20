@@ -4,20 +4,20 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Users, UserCheck, Briefcase, DollarSign,
   FolderKanban, MessageSquare, Settings, LogOut, ChevronLeft,
-  ChevronRight, Shield, ExternalLink, ClipboardList,
+  ChevronRight, Shield, ExternalLink, ScrollText,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 const NAV_ITEMS = [
-  { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true, perm: 'dashboard' },
-  { to: '/admin/visitors', icon: Users, label: 'Visitors', perm: 'visitors' },
-  { to: '/admin/clients', icon: UserCheck, label: 'Clients', perm: 'clients' },
-  { to: '/admin/hr', icon: Briefcase, label: 'HR', perm: 'employees' },
-  { to: '/admin/finance', icon: DollarSign, label: 'Finance', perm: 'finance' },
-  { to: '/admin/projects', icon: FolderKanban, label: 'Projects', perm: 'projects' },
-  { to: '/admin/leads', icon: MessageSquare, label: 'Leads', perm: 'leads' },
-  { to: '/admin/logs', icon: ClipboardList, label: 'Activity Logs', perm: 'logs' },
-  { to: '/admin/settings', icon: Settings, label: 'Settings', perm: 'settings' },
+  { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true, permission: 'dashboard' },
+  { to: '/admin/visitors', icon: Users, label: 'Visitors', permission: 'visitors' },
+  { to: '/admin/clients', icon: UserCheck, label: 'Clients', permission: 'clients' },
+  { to: '/admin/hr', icon: Briefcase, label: 'HR', permission: 'employees' },
+  { to: '/admin/finance', icon: DollarSign, label: 'Finance', permission: 'finance' },
+  { to: '/admin/projects', icon: FolderKanban, label: 'Projects', permission: 'projects' },
+  { to: '/admin/leads', icon: MessageSquare, label: 'Leads', permission: 'leads' },
+  { to: '/admin/logs', icon: ScrollText, label: 'Activity Logs', permission: 'logs' },
+  { to: '/admin/settings', icon: Settings, label: 'Settings', permission: 'settings' },
 ]
 
 export default function AdminSidebar() {
@@ -25,12 +25,12 @@ export default function AdminSidebar() {
   const { logout, hasPermission } = useAuth()
   const navigate = useNavigate()
 
+  const visibleItems = NAV_ITEMS.filter(item => hasPermission(item.permission))
+
   const handleLogout = () => {
     logout()
     navigate('/admin/login', { replace: true })
   }
-
-  const visibleItems = NAV_ITEMS.filter(item => hasPermission(item.perm))
 
   return (
     <motion.aside

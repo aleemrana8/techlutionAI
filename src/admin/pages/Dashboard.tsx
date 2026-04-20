@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import {
   Users, UserCheck, FolderKanban, MessageSquare,
@@ -6,8 +6,7 @@ import {
 } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { getDashboard } from '../../api/adminApi'
-import { useAdminSocket } from '../hooks/useAdminSocket'
-import { useAuth } from '../context/AuthContext'
+import { useSocket } from '../hooks/useSocket'
 
 /* ─── Animated Counter ─────────────────────────────────────────────────────── */
 
@@ -85,21 +84,27 @@ const statusColors: Record<string, string> = {
 
 export default function Dashboard() {
   const [data, setData] = useState<any>(null)
-  const { user } = useAuth()
+  const { subscribe } = useSocket()
 
-  const fetchData = () => {
+  const fetchData = useCallback(() => {
     getDashboard()
       .then((res) => setData(res.data.data))
       .catch(() => {})
-  }
+  }, [])
 
-  useEffect(() => { fetchData() }, [])
-
-  // Real-time updates via Socket.IO
-  useAdminSocket((event) => {
-    // Refresh dashboard on any change
-    if (event) fetchData()
-  })
+  useEffect(() => {
+    fetchData()
+    // Real-time: refresh dashboard on any new data event
+    const unsubs = [
+      subscribe('lead:new', fetchData),
+      subscribe('client:new', fetchData),
+      subscribe('visitor:new', fetchData),
+      subscribe('finance:new', fetchData),
+      subscribe('employee:new', fetchData),
+      subscribe('dashboard:refresh', fetchData),
+    ]
+    return () => unsubs.forEach(u => u())
+  }, [fetchData, subscribe])
 
   const cards = data
     ? [
@@ -122,10 +127,7 @@ export default function Dashboard() {
       {/* Page Title */}
       <div>
         <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-        <p className="text-slate-400 text-sm mt-1">
-          Welcome back{user?.name ? `, ${user.name}` : ''} — here's your business overview
-          {user?.role && <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">{user.role}</span>}
-        </p>
+        <p className="text-slate-400 text-sm mt-1">Welcome back — here's your business overview</p>
       </div>
 
       {/* Summary Cards */}
