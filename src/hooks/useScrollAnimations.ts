@@ -34,21 +34,20 @@ export function useSectionReveal() {
 
   const isMobile = getIsMobile()
 
-  // Opacity: 0 → 1 as section enters, 1 → 0.3 as it leaves
-  const rawOpacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0.3])
+  // Opacity: fade-in only, stays fully visible (no fade-out on scroll away)
+  const rawOpacity = useTransform(scrollYProgress, [0, 0.2], [0, 1])
   const opacity = prefersReduced ? (1 as unknown as MotionValue<number>) : rawOpacity
 
-  // Slight scale in
+  // Slight scale in (no scale-out)
   const rawScale = useTransform(
     scrollYProgress,
-    [0, 0.2, 0.8, 1],
-    isMobile ? [1, 1, 1, 1] : [0.96, 1, 1, 0.98]
+    [0, 0.2],
+    isMobile ? [1, 1] : [0.96, 1]
   )
   const scale = useSpring(rawScale, SPRING)
 
-  // Blur: start blurry, become clear
-  const rawBlur = useTransform(scrollYProgress, [0, 0.15], [4, 0])
-  const blurValue = isMobile || prefersReduced ? 0 : rawBlur
+  // No blur on entry — always clear
+  const blurValue = 0
 
   return { ref, opacity, scale, blurValue }
 }
@@ -91,11 +90,10 @@ export const staggerContainer = {
 }
 
 export const fadeUpItem = {
-  hidden: { opacity: 0, y: 30, filter: 'blur(4px)' },
+  hidden: { opacity: 0, y: 30 },
   visible: {
     opacity: 1,
     y: 0,
-    filter: 'blur(0px)',
     transition: {
       duration: 0.6,
       ease: [0.22, 1, 0.36, 1],
@@ -104,11 +102,10 @@ export const fadeUpItem = {
 }
 
 export const scaleInItem = {
-  hidden: { opacity: 0, scale: 0.92, filter: 'blur(4px)' },
+  hidden: { opacity: 0, scale: 0.92 },
   visible: {
     opacity: 1,
     scale: 1,
-    filter: 'blur(0px)',
     transition: {
       duration: 0.5,
       ease: [0.22, 1, 0.36, 1],

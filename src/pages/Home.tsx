@@ -14,15 +14,15 @@ import { useSectionReveal } from '../hooks/useScrollAnimations'
 
 /* ── Scroll-animated section wrapper ── */
 function ScrollSection({ children }: { children: React.ReactNode }) {
-  const { ref, opacity, scale, blurValue } = useSectionReveal()
+  const { ref, opacity, scale } = useSectionReveal()
 
   return (
     <motion.div
       ref={ref}
+      className="relative z-10"
       style={{
         opacity,
         scale,
-        filter: typeof blurValue === 'number' ? 'none' : blurValue as any,
       }}
     >
       {children}

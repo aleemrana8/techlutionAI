@@ -16,11 +16,10 @@ const containerVariants = (stagger: number, delay: number) => ({
 })
 
 export const staggerChildVariants = {
-  hidden: { opacity: 0, y: 24, filter: 'blur(4px)' },
+  hidden: { opacity: 0, y: 24 },
   visible: {
     opacity: 1,
     y: 0,
-    filter: 'blur(0px)',
     transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
   },
 }

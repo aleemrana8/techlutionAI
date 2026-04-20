@@ -5,7 +5,7 @@ import {
   Bot, Sparkles, ArrowRight, Loader2, User,
   Briefcase, Phone, Mail, FileText
 } from 'lucide-react'
-import { sendChatMessage, submitContact } from '../api/api'
+import { sendChatMessage, streamChatMessage, submitContact } from '../api/api'
 
 /* ═══════════════════════════════════════════════════════════════════════════
    TYPES
@@ -63,12 +63,28 @@ export default function Chatbot() {
     {
       id: uid(),
       role: 'bot',
-      text: "Hey there! 👋 I'm **Techlution Bot**, your AI assistant.\n\nI can help you with our services, projects, pricing, or start a new project. What can I do for you?",
+      text: "Hey there! 👋 I'm **Techlution Bot**, your AI-powered assistant.\n\nAsk me anything — whether it's about AI, technology, our services, or your next project idea. I'm here to help!",
     },
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [showQuickReplies, setShowQuickReplies] = useState(true)
+
+  // Session ID for chat memory
+  const [sessionId] = useState(() => uid() + uid())
+
+  // Build history from messages (last 6 user/bot pairs)
+  const buildHistory = useCallback(() => {
+    const pairs: { user: string; bot: string }[] = []
+    const msgs = messages.filter(m => m.role === 'user' || m.role === 'bot')
+    for (let i = 0; i < msgs.length - 1; i++) {
+      if (msgs[i].role === 'user' && msgs[i + 1]?.role === 'bot') {
+        pairs.push({ user: msgs[i].text, bot: msgs[i + 1].text })
+        i++ // skip the bot message
+      }
+    }
+    return pairs.slice(-6)
+  }, [messages])
 
   // Voice
   const [listening, setListening] = useState(false)
@@ -76,6 +92,11 @@ export default function Chatbot() {
   const [speaking, setSpeaking] = useState(false)
   const recognitionRef = useRef<any>(null)
   const synthRef = useRef(typeof window !== 'undefined' ? window.speechSynthesis : null)
+
+  // Streaming
+  const [streaming, setStreaming] = useState(false)
+  const streamAbortRef = useRef<(() => void) | null>(null)
+  const streamMsgIdRef = useRef<string>('')
 
   // Lead capture
   const [leadStep, setLeadStep] = useState<LeadStep>('idle')
@@ -256,7 +277,7 @@ export default function Chatbot() {
 
   const sendMessage = async (text?: string) => {
     const msg = (text ?? input).trim()
-    if (!msg || loading) return
+    if (!msg || loading || streaming) return
 
     addMessage('user', msg)
     setInput('')
@@ -268,7 +289,7 @@ export default function Chatbot() {
       if (isQuestion(msg)) {
         setLoading(true)
         try {
-          const res = await sendChatMessage(msg)
+          const res = await sendChatMessage(msg, sessionId, buildHistory())
           const aiReply = res.data.data?.reply ?? res.data.reply ?? ''
           const nudge = LEAD_STEP_PROMPTS[leadStep] ?? ''
           const fullReply = aiReply
@@ -296,19 +317,65 @@ export default function Chatbot() {
       return
     }
 
-    // Normal AI chat
+    // Normal AI chat — use streaming
     setLoading(true)
-    try {
-      const res = await sendChatMessage(msg)
-      const reply = res.data.data?.reply ?? res.data.reply ?? 'Sorry, I could not generate a response.'
-      addMessage('bot', reply)
-      speakText(reply)
-    } catch {
-      const reply = "Sorry, I couldn't connect right now. Please try again or contact us at **raleem811811@gmail.com**."
-      addMessage('bot', reply)
-      speakText(reply)
-    }
-    setLoading(false)
+
+    // Create placeholder bot message for streaming
+    const botMsgId = uid()
+    streamMsgIdRef.current = botMsgId
+    setMessages(prev => [...prev, { id: botMsgId, role: 'bot', text: '' }])
+
+    const abort = streamChatMessage(
+      msg,
+      sessionId,
+      buildHistory(),
+      // onChunk — append text to the streaming message
+      (chunkText) => {
+        setLoading(false)
+        setStreaming(true)
+        setMessages(prev =>
+          prev.map(m =>
+            m.id === botMsgId ? { ...m, text: m.text + chunkText } : m
+          )
+        )
+      },
+      // onMeta
+      undefined,
+      // onDone
+      () => {
+        setStreaming(false)
+        setLoading(false)
+        streamMsgIdRef.current = ''
+        // Speak the full response after stream completes
+        setMessages(prev => {
+          const final = prev.find(m => m.id === botMsgId)
+          if (final?.text) speakText(final.text)
+          return prev
+        })
+      },
+      // onError — fallback to non-streaming
+      async () => {
+        setStreaming(false)
+        try {
+          const res = await sendChatMessage(msg, sessionId, buildHistory())
+          const reply = res.data.data?.reply ?? res.data.reply ?? 'Sorry, I could not generate a response.'
+          setMessages(prev =>
+            prev.map(m => m.id === botMsgId ? { ...m, text: reply } : m)
+          )
+          speakText(reply)
+        } catch {
+          setMessages(prev =>
+            prev.map(m => m.id === botMsgId
+              ? { ...m, text: "Sorry, I couldn't connect right now. Please try again or contact us at **raleem811811@gmail.com**." }
+              : m
+            )
+          )
+        }
+        setLoading(false)
+        streamMsgIdRef.current = ''
+      },
+    )
+    streamAbortRef.current = abort
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -457,8 +524,12 @@ export default function Chatbot() {
                         <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[10px] text-cyan-400 font-medium flex items-center gap-1">
                           <Mic size={10} className="animate-pulse" /> Listening…
                         </motion.span>
+                      ) : streaming ? (
+                        <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[10px] text-cyan-400 font-medium flex items-center gap-1">
+                          <Sparkles size={10} className="animate-pulse" /> Streaming…
+                        </motion.span>
                       ) : loading ? (
-                        <span className="text-[10px] text-orange-400 font-medium">Typing…</span>
+                        <span className="text-[10px] text-orange-400 font-medium">Thinking…</span>
                       ) : (
                         <span className="text-[10px] text-emerald-400 font-medium">Online • AI-Powered</span>
                       )}
@@ -520,7 +591,14 @@ export default function Chatbot() {
                           : 'bg-white/[0.05] text-slate-300 rounded-2xl rounded-bl-md border border-white/[0.04]'
                       }`}
                     >
-                      {m.role === 'bot' ? formatText(m.text) : m.text}
+                      {m.role === 'bot' ? (
+                        <>
+                          {formatText(m.text)}
+                          {streaming && m.id === streamMsgIdRef.current && (
+                            <span className="inline-block w-[2px] h-[14px] bg-cyan-400 ml-0.5 align-middle animate-pulse" />
+                          )}
+                        </>
+                      ) : m.text}
                     </div>
 
                     {/* User avatar */}
@@ -532,8 +610,8 @@ export default function Chatbot() {
                   </motion.div>
                 ))}
 
-                {/* Typing indicator */}
-                {loading && (
+                {/* Typing indicator — only before stream starts */}
+                {loading && !streaming && (
                   <motion.div
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -608,7 +686,7 @@ export default function Chatbot() {
                       leadStep === 'confirm' ? 'Yes / No' :
                       'Ask anything…'
                     }
-                    disabled={loading}
+                    disabled={loading || streaming}
                     className="flex-1 bg-white/[0.04] border border-white/[0.08] text-white text-sm rounded-xl px-3.5 py-3 sm:py-2.5 placeholder-slate-600 focus:outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/10 focus:bg-white/[0.06] transition-all disabled:opacity-50"
                   />
 
@@ -637,12 +715,12 @@ export default function Chatbot() {
                   {/* Send button */}
                   <motion.button
                     onClick={() => sendMessage()}
-                    disabled={!input.trim() || loading}
+                    disabled={!input.trim() || loading || streaming}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     className="w-10 h-10 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-500 flex items-center justify-center text-white shadow-lg shadow-cyan-500/20 disabled:opacity-30 disabled:shadow-none transition-all"
                   >
-                    {loading ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
+                    {(loading || streaming) ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
                   </motion.button>
                 </div>
 

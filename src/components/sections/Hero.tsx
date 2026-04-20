@@ -302,7 +302,7 @@ function StatsDashboard() {
             <div className={`text-2xl font-black bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`}>
               <AnimatedCounter target={stat.value} suffix={stat.suffix} />
             </div>
-            <div className="text-[10px] text-slate-500 mt-1 uppercase tracking-[0.15em]">
+            <div className="text-[10px] text-slate-400 mt-1 uppercase tracking-[0.15em]">
               {stat.label}
             </div>
           </motion.div>
@@ -336,7 +336,7 @@ function StatsDashboard() {
             ))}
             <span className="text-[10px] text-slate-400 ml-1">5.0</span>
           </div>
-          <span className="text-[10px] text-slate-500">Innovate · Automate · Elevate — Techlution AI</span>
+          <span className="text-[10px] text-slate-400">Innovate · Automate · Elevate — Techlution AI</span>
         </div>
       </motion.div>
     </motion.div>
@@ -360,7 +360,7 @@ export default function Hero({ onStartProject, onContactUs }: { onStartProject?:
   const textY = useSpring(useTransform(scrollYProgress, [0, 1], [0, isMobile ? 0 : -80]), { stiffness: 100, damping: 30 })
   const sphereY = useSpring(useTransform(scrollYProgress, [0, 1], [0, isMobile ? 0 : -40]), { stiffness: 100, damping: 30 })
   const bgScale = useTransform(scrollYProgress, [0, 1], [1, 1.15])
-  const bgOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0])
+  const bgOpacity = useTransform(scrollYProgress, [0, 0.8], [1, isMobile ? 0.85 : 0.7])
 
   useEffect(() => {
     const id = setInterval(() => setWordIdx((i) => (i + 1) % CYCLING_WORDS.length), 2600)
@@ -464,7 +464,7 @@ export default function Hero({ onStartProject, onContactUs }: { onStartProject?:
             {/* ── Subheading ── */}
             <motion.p
               {...fadeUp(0.45)}
-              className="text-slate-400 text-base md:text-lg leading-relaxed max-w-lg mb-8"
+              className="text-slate-300 text-base md:text-lg leading-relaxed max-w-lg mb-8"
             >
               Smart solutions, minimum cost, maximum impact — we build intelligent software,
               automation systems, web & mobile apps, and cloud infrastructure that make work faster and life easier.
@@ -522,8 +522,8 @@ export default function Hero({ onStartProject, onContactUs }: { onStartProject?:
             return (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 18, ...(heroIsMobile ? {} : { filter: 'blur(4px)' }) }}
-                animate={{ opacity: 1, y: 0, ...(heroIsMobile ? {} : { filter: 'blur(0px)' }) }}
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.1 + i * 0.12, duration: 0.55 }}
                 whileHover={{ y: -6, scale: 1.02, boxShadow: '0 12px 30px rgba(0,0,0,0.3)', transition: { duration: 0.25, type: 'spring', stiffness: 300 } }}
                 className="group flex items-start gap-4 p-4 sm:p-5 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 hover:bg-white/[0.04] transition-all cursor-default"
@@ -533,7 +533,7 @@ export default function Hero({ onStartProject, onContactUs }: { onStartProject?:
                 </div>
                 <div>
                   <h4 className="text-white font-bold text-sm mb-1">{f.title}</h4>
-                  <p className="text-slate-500 text-xs sm:text-[13px] leading-relaxed">{f.desc}</p>
+                  <p className="text-slate-400 text-xs sm:text-[13px] leading-relaxed">{f.desc}</p>
                 </div>
               </motion.div>
             )

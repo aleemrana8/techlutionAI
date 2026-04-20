@@ -1,5 +1,6 @@
 ﻿import { motion } from 'framer-motion'
-import { Mail, Phone, MapPin, ArrowRight } from 'lucide-react'
+import { Mail, Phone, MapPin, ArrowRight, Shield } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
 
@@ -150,6 +151,15 @@ export default function Footer() {
                   </a>
                 </li>
               ))}
+              <li>
+                <Link
+                  to="/admin"
+                  className="flex items-center gap-1.5 text-slate-500 text-xs hover:text-cyan-400 transition-colors py-0.5"
+                >
+                  <Shield size={11} />
+                  Administrator
+                </Link>
+              </li>
             </ul>
           </motion.div>
         </div>

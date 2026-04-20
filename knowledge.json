@@ -1,0 +1,68 @@
+{
+  "company": {
+    "name": "Techlution AI",
+    "tagline": "AI-powered IT solutions that make work faster, smarter, and more efficient.",
+    "description": "Techlution AI builds intelligent systems using AI, automation, and scalable technologies to help businesses optimize operations and grow."
+  },
+
+  "services": [
+    {
+      "title": "AI & Machine Learning",
+      "content": "Custom ML models, LLM development, AI agents, RAG systems, and prompt engineering tailored for business automation and intelligence."
+    },
+    {
+      "title": "Computer Vision",
+      "content": "OCR, object detection, facial recognition, and medical imaging solutions using advanced AI models."
+    },
+    {
+      "title": "Automation & Integration",
+      "content": "n8n workflows, API integrations, webhooks, and real-time system automation to reduce manual work."
+    },
+    {
+      "title": "Healthcare AI Solutions",
+      "content": "EHR, PMS, RCM automation, medical billing, coding, denial management, and HIPAA-compliant systems."
+    },
+    {
+      "title": "DevOps & Cloud",
+      "content": "Azure, Docker, Terraform, CI/CD pipelines, scalable deployments, and infrastructure automation."
+    },
+    {
+      "title": "Data Pipelines",
+      "content": "Web scraping, ETL pipelines, structured data extraction, and processing systems."
+    }
+  ],
+
+  "projects": [
+    {
+      "name": "Hospital Management System",
+      "details": "Complete system for patient records, scheduling, billing, and reporting."
+    },
+    {
+      "name": "RCM Automation",
+      "details": "Automated revenue cycle management including billing, claim submission, and payment tracking."
+    },
+    {
+      "name": "EHR / PMS / EDI Systems",
+      "details": "Healthcare systems including patient records, practice management, and 837P EDI integrations."
+    },
+    {
+      "name": "Medical Coding & Denial Management",
+      "details": "AI-assisted coding and denial handling systems to improve claim approval rates."
+    },
+    {
+      "name": "Voice AI Agents",
+      "details": "AI calling agents for appointment scheduling, rescheduling, cancellations, and prescription refills."
+    },
+    {
+      "name": "Customer Support AI",
+      "details": "AI chatbots and voice agents for businesses like restaurants, offices, and hotels."
+    }
+  ],
+
+  "contact": {
+    "name": "Rana Muhammad Aleem Akhtar",
+    "phone": "+92 315 1664843",
+    "email": "raleem811811@gmail.com",
+    "address": "City Park Road, Islamabad, Pakistan"
+  }
+}

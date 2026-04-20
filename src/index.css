@@ -471,4 +471,29 @@ a:hover, button:hover, [role="button"]:hover, .cursor-hover:hover {
   .site-grid {
     background-size: 60px 60px;
   }
+
+  /* ── Mobile text brightness boost ── */
+  /* Upgrade low-contrast text to readable levels on mobile */
+  .text-slate-400 {
+    color: rgb(203 213 225) !important; /* slate-300 equivalent */
+  }
+
+  .text-slate-500 {
+    color: rgb(148 163 184) !important; /* slate-400 equivalent */
+  }
+
+  .text-slate-600 {
+    color: rgb(148 163 184) !important; /* slate-400 equivalent */
+  }
+
+  /* Ensure all section content stays above backgrounds */
+  section {
+    position: relative;
+    z-index: 2;
+  }
+
+  main {
+    position: relative;
+    z-index: 2;
+  }
 }

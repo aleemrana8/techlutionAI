@@ -103,13 +103,15 @@ function App() {
       <div
         className="fixed inset-0 -z-10 pointer-events-none"
         style={{ background: isMobile
-          ? 'linear-gradient(180deg, rgba(0,0,0,0.50) 0%, rgba(0,0,0,0.30) 50%, rgba(0,0,0,0.52) 100%)'
-          : 'linear-gradient(180deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.42) 50%, rgba(0,0,0,0.68) 100%)'
+          ? 'linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.15) 50%, rgba(0,0,0,0.28) 100%)'
+          : 'linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.30) 50%, rgba(0,0,0,0.48) 100%)'
         }}
       />
 
       {/* ── Site content with routing ── */}
-      <AppRoutes />
+      <div className="relative z-10">
+        <AppRoutes />
+      </div>
 
       {/* ── Background Effects (lazy loaded) ── */}
       <Suspense fallback={null}>
