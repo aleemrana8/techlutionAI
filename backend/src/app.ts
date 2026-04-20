@@ -123,8 +123,8 @@ let adminPasswordHash: string | null = null
 
 app.post('/api/admin/env-login', loginLimiter, async (req, res) => {
   const { adminId, password } = req.body
-  const envId = process.env.ADMIN_ID ?? 'Techlution811'
-  const envPwd = process.env.ADMIN_PASSWORD ?? 'Ar@811811'
+  const envId = (process.env.ADMIN_ID ?? 'Techlution811').trim()
+  const envPwd = (process.env.ADMIN_PASSWORD ?? 'Ar@811811').trim()
 
   if (!adminId || !password || adminId !== envId) {
     res.status(401).json({ success: false, message: 'Invalid credentials' })
