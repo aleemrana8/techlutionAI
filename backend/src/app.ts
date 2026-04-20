@@ -116,26 +116,8 @@ app.use('/api/contact', contactRoutes)
 app.use('/api/healthcare', healthcareRoutes)
 app.use('/api/workflows', workflowRoutes)
 app.use('/api/upload', uploadRoutes)
-app.use('/api/admin', adminRoutes)
 
-// --- Public Visitor Tracking ---
-app.post('/api/visitor', async (req, res) => {
-  try {
-    const { device, browser, os, page, referrer, sessionId } = req.body
-    const visitor = await prisma.visitor.create({
-      data: {
-        ipAddress: req.ip || req.socket.remoteAddress,
-        device: ['DESKTOP', 'MOBILE', 'TABLET'].includes(device) ? device : 'OTHER',
-        browser, os, page, referrer, sessionId,
-      },
-    })
-    // Socket.IO emit (skip in serverless)
-    try { const { emitDashboardEvent } = await import('./config/socket'); emitDashboardEvent('visitor:new', { id: visitor.id, page, device }) } catch {}
-    res.status(201).json({ success: true, data: { id: visitor.id } })
-  } catch { res.status(500).json({ success: false, message: 'Failed to log visitor' }) }
-})
-
-// --- Admin Auth (env-based fallback) ---
+// --- Admin Auth (env-based fallback) — MUST be before adminRoutes ---
 
 let adminPasswordHash: string | null = null
 
@@ -172,6 +154,26 @@ app.get('/api/admin/verify', async (req, res) => {
     } catch {}
     res.json({ success: true, data: { user, permissions: ROLE_PERMISSIONS[role as keyof typeof ROLE_PERMISSIONS] } })
   } catch { res.status(401).json({ success: false, message: 'Invalid or expired token' }) }
+})
+
+// Admin CRUD routes (requires auth)
+app.use('/api/admin', adminRoutes)
+
+// --- Public Visitor Tracking ---
+app.post('/api/visitor', async (req, res) => {
+  try {
+    const { device, browser, os, page, referrer, sessionId } = req.body
+    const visitor = await prisma.visitor.create({
+      data: {
+        ipAddress: req.ip || req.socket.remoteAddress,
+        device: ['DESKTOP', 'MOBILE', 'TABLET'].includes(device) ? device : 'OTHER',
+        browser, os, page, referrer, sessionId,
+      },
+    })
+    // Socket.IO emit (skip in serverless)
+    try { const { emitDashboardEvent } = await import('./config/socket'); emitDashboardEvent('visitor:new', { id: visitor.id, page, device }) } catch {}
+    res.status(201).json({ success: true, data: { id: visitor.id } })
+  } catch { res.status(500).json({ success: false, message: 'Failed to log visitor' }) }
 })
 
 // --- Chat Endpoint ---
