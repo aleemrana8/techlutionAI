@@ -447,27 +447,14 @@ export default function Chatbot() {
       {/* ── Floating Toggle Button ── */}
       <motion.button
         onClick={() => setOpen(o => !o)}
-        className="fixed bottom-6 right-6 z-[90] group"
+        className="fixed bottom-6 right-6 z-[90]"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         aria-label="Chat with Techlution Bot"
       >
-        {/* Animated glow ring */}
-        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-500 via-violet-500 to-orange-500 opacity-60 blur-lg group-hover:opacity-80 transition-opacity animate-spin-slow" />
-
-        {/* Button body */}
-        <div className="relative w-[60px] h-[60px] rounded-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border border-white/10 flex items-center justify-center shadow-2xl shadow-cyan-500/20">
-          <AnimatePresence mode="wait">
-            {open ? (
-              <motion.div key="close" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.2 }}>
-                <X size={22} className="text-white" />
-              </motion.div>
-            ) : (
-              <motion.div key="open" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ type: 'spring', stiffness: 300 }}>
-                <Bot size={24} className="text-cyan-400" />
-              </motion.div>
-            )}
-          </AnimatePresence>
+        {/* Button body — always show logo as static DP */}
+        <div className="relative w-[56px] h-[56px] rounded-full bg-slate-900/90 border border-white/15 flex items-center justify-center shadow-xl shadow-black/40 overflow-hidden">
+          <img src="/images/logo.png" alt="Chat" className="w-full h-full object-cover" />
 
           {/* Unread badge */}
           {!open && unread > 0 && (
@@ -479,6 +466,9 @@ export default function Chatbot() {
               {unread > 9 ? '9+' : unread}
             </motion.span>
           )}
+
+          {/* Online indicator */}
+          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-slate-900" />
         </div>
       </motion.button>
 
@@ -508,21 +498,11 @@ export default function Chatbot() {
                 <div className="flex items-center gap-3">
                   {/* 3D Orb Avatar */}
                   <div className="relative flex-shrink-0">
-                    <div className="absolute inset-0 w-11 h-11 rounded-xl bg-gradient-to-br from-cyan-500/30 to-violet-500/30 blur-md" />
-                    <div className="relative w-11 h-11 rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 border border-white/10 flex items-center justify-center shadow-lg overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-violet-500/10" />
-                      <Bot size={20} className="text-cyan-400 relative z-10" />
-                      {/* Floating sparkle */}
-                      <motion.div
-                        animate={{ y: [0, -3, 0], opacity: [0.3, 1, 0.3] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        className="absolute top-1 right-1"
-                      >
-                        <Sparkles size={8} className="text-violet-400" />
-                      </motion.div>
+                    <div className="w-11 h-11 rounded-full bg-slate-900 border border-white/15 flex items-center justify-center overflow-hidden">
+                      <img src="/images/logo.png" alt="Techlution AI" className="w-full h-full object-cover" />
                     </div>
                     {/* Online dot */}
-                    <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-slate-950 shadow-lg shadow-emerald-400/50" />
+                    <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-slate-950" />
                   </div>
 
                   <div className="flex-1 min-w-0">
@@ -592,7 +572,7 @@ export default function Chatbot() {
                     {/* Bot avatar */}
                     {m.role === 'bot' && (
                       <div className="flex-shrink-0 w-7 h-7 rounded-lg bg-gradient-to-br from-cyan-500/15 to-violet-500/15 border border-white/[0.06] flex items-center justify-center mt-0.5">
-                        <Bot size={13} className="text-cyan-400" />
+                        <img src="/images/logo.png" alt="Bot" className="w-4 h-4 object-contain" />
                       </div>
                     )}
 
@@ -630,7 +610,7 @@ export default function Chatbot() {
                     className="flex gap-2 items-start"
                   >
                     <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-cyan-500/15 to-violet-500/15 border border-white/[0.06] flex items-center justify-center">
-                      <Bot size={13} className="text-cyan-400" />
+                      <img src="/images/logo.png" alt="Bot" className="w-4 h-4 object-contain" />
                     </div>
                     <div className="bg-white/[0.05] border border-white/[0.04] rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-1.5">
                       <motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.2, repeat: Infinity, delay: 0 }} className="w-1.5 h-1.5 rounded-full bg-cyan-400" />

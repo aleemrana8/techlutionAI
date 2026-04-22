@@ -8,7 +8,7 @@ import { logActivity } from '../services/activity.service'
 
 export async function create(req: AdminRequest, res: Response, next: NextFunction) {
   try {
-    const { name, email, phone, role, department, status, workload, salary, joinDate, notes } = req.body
+    const { name, email, phone, role, department, status, workload, salary, joinDate, notes, skills, isFounder } = req.body
     if (!name || !email || !role || !department) {
       sendError(res, 'Name, email, role, and department are required')
       return
@@ -17,7 +17,7 @@ export async function create(req: AdminRequest, res: Response, next: NextFunctio
       data: {
         name, email, phone, role, department, status, workload, salary,
         joinDate: joinDate ? new Date(joinDate) : new Date(),
-        notes,
+        notes, skills: skills || [], isFounder: isFounder || false,
       },
     })
     emitDashboardEvent('employee:new', employee)
@@ -61,7 +61,7 @@ export async function getById(req: AdminRequest, res: Response, next: NextFuncti
 
 export async function update(req: AdminRequest, res: Response, next: NextFunction) {
   try {
-    const { name, email, phone, role, department, status, workload, salary, notes } = req.body
+    const { name, email, phone, role, department, status, workload, salary, notes, skills, isFounder } = req.body
     const employee = await prisma.employee.update({
       where: { id: req.params.id },
       data: {
@@ -74,6 +74,8 @@ export async function update(req: AdminRequest, res: Response, next: NextFunctio
         ...(workload !== undefined && { workload }),
         ...(salary !== undefined && { salary }),
         ...(notes !== undefined && { notes }),
+        ...(skills !== undefined && { skills }),
+        ...(isFounder !== undefined && { isFounder }),
       },
     })
     sendSuccess(res, employee, 'Employee updated')
@@ -84,6 +86,32 @@ export async function remove(req: AdminRequest, res: Response, next: NextFunctio
   try {
     await prisma.employee.delete({ where: { id: req.params.id } })
     sendSuccess(res, null, 'Employee deleted')
+  } catch (err) { next(err) }
+}
+
+export async function getAssignments(req: AdminRequest, res: Response, next: NextFunction) {
+  try {
+    const assignments = await prisma.projectAssignment.findMany({
+      where: { employeeId: req.params.id },
+      include: { project: { select: { id: true, title: true, status: true, category: true, shortDescription: true, deadline: true, durationWeeks: true } } },
+    })
+
+    // Also get finance/share data for this employee
+    const shares = await prisma.projectShare.findMany({
+      where: { employeeId: req.params.id },
+      include: { projectFinance: { select: { projectRef: true, totalAmount: true, netAmount: true, currency: true, sharePerPerson: true, totalMembers: true } } },
+    })
+
+    // Merge share info into assignments
+    const enriched = assignments.map(a => {
+      const share = shares.find(s => s.projectFinance.projectRef === a.projectRef)
+      return {
+        ...a,
+        share: share ? { shareAmount: share.shareAmount, paymentStatus: share.paymentStatus, totalAmount: share.projectFinance.totalAmount, netAmount: share.projectFinance.netAmount, currency: share.projectFinance.currency } : null,
+      }
+    })
+
+    sendSuccess(res, enriched)
   } catch (err) { next(err) }
 }
 

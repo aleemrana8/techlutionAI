@@ -11,8 +11,8 @@ import AdminLogin from '../admin/pages/AdminLogin'
 import AdminLayout from '../admin/components/AdminLayout'
 import Dashboard from '../admin/pages/Dashboard'
 import Visitors from '../admin/pages/Visitors'
-import Clients from '../admin/pages/Clients'
-import HRManagement from '../admin/pages/HRManagement'
+import Members from '../admin/pages/Members'
+import Proposals from '../admin/pages/Proposals'
 import FinanceDashboard from '../admin/pages/FinanceDashboard'
 import ProjectsBoard from '../admin/pages/ProjectsBoard'
 import Leads from '../admin/pages/Leads'
@@ -21,6 +21,8 @@ import Analytics from '../admin/pages/Analytics'
 import ActivityLogs from '../admin/pages/ActivityLogs'
 import AdminUsers from '../admin/pages/AdminUsers'
 import Reports from '../admin/pages/Reports'
+import WhatsAppChat from '../admin/pages/WhatsAppChat'
+import WhatsAppBroadcast from '../admin/pages/WhatsAppBroadcast'
 
 export default function AppRoutes() {
   return (
@@ -44,15 +46,17 @@ export default function AppRoutes() {
       >
         <Route index element={<Dashboard />} />
         <Route path="visitors" element={<Visitors />} />
-        <Route path="clients" element={<Clients />} />
-        <Route path="hr" element={<HRManagement />} />
+        <Route path="members" element={<Members />} />
+        <Route path="proposals" element={<Proposals />} />
         <Route path="finance" element={<FinanceDashboard />} />
         <Route path="projects" element={<ProjectsBoard />} />
-        <Route path="leads" element={<Leads />} />
+        <Route path="inquiries" element={<Leads />} />
         <Route path="analytics" element={<Analytics />} />
         <Route path="logs" element={<ActivityLogs />} />
         <Route path="users" element={<AdminUsers />} />
         <Route path="reports" element={<Reports />} />
+        <Route path="whatsapp" element={<WhatsAppChat />} />
+        <Route path="whatsapp-broadcast" element={<WhatsAppBroadcast />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
     </Routes>

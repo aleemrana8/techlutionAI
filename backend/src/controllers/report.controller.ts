@@ -2,6 +2,7 @@ import { Response, NextFunction } from 'express'
 import { AdminRequest } from '../middlewares/admin.middleware'
 import { sendSuccess, sendError } from '../utils/response'
 import { generateWeeklyReport, saveReport, emailWeeklyReport } from '../services/report.service'
+import { notifyAdmin, waTemplates } from '../services/whatsapp.service'
 import prisma from '../config/database'
 
 // ─── Download Report (generate on-the-fly) ──────────────────────────────────
@@ -23,6 +24,11 @@ export async function downloadReport(_req: AdminRequest, res: Response, next: Ne
 export async function generateReport(_req: AdminRequest, res: Response, next: NextFunction) {
   try {
     const filepath = await saveReport()
+
+    // WhatsApp: notify admin that report is ready
+    const downloadUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/api/admin/reports/download`
+    void notifyAdmin(waTemplates.reportReady('Weekly Report', downloadUrl), 'report_generated')
+
     sendSuccess(res, { filepath }, 'Report generated')
   } catch (err) { next(err) }
 }

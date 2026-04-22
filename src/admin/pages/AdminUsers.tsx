@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { UserCog, Plus, Pencil, Trash2, X, Shield } from 'lucide-react'
 import { getAdminUsers, createAdminUser, updateAdminUser, deleteAdminUser } from '../../api/adminApi'
+import ConfirmModal from '../components/ConfirmModal'
 
 const ROLES = ['SUPER_ADMIN', 'ADMIN', 'HR', 'FINANCE', 'MANAGER', 'SUPPORT'] as const
 
@@ -31,6 +32,7 @@ export default function AdminUsers() {
   const [editing, setEditing] = useState<AdminUser | null>(null)
   const [form, setForm] = useState({ username: '', email: '', name: '', password: '', role: 'SUPPORT' })
   const [saving, setSaving] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState<AdminUser | null>(null)
 
   const fetchUsers = () => {
     getAdminUsers()
@@ -72,7 +74,6 @@ export default function AdminUsers() {
   }
 
   const handleDelete = async (u: AdminUser) => {
-    if (!confirm(`Delete admin user "${u.username}"?`)) return
     try {
       await deleteAdminUser(u.id)
       fetchUsers()
@@ -120,7 +121,7 @@ export default function AdminUsers() {
                 <button onClick={() => openEdit(u)} className="p-1.5 rounded-lg hover:bg-white/[0.06] text-slate-400 hover:text-white transition-all">
                   <Pencil size={14} />
                 </button>
-                <button onClick={() => handleDelete(u)} className="p-1.5 rounded-lg hover:bg-rose-500/10 text-slate-400 hover:text-rose-400 transition-all">
+                <button onClick={() => setConfirmDelete(u)} className="p-1.5 rounded-lg hover:bg-rose-500/10 text-slate-400 hover:text-rose-400 transition-all">
                   <Trash2 size={14} />
                 </button>
               </div>
@@ -220,6 +221,16 @@ export default function AdminUsers() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ConfirmModal
+        open={!!confirmDelete}
+        title="Delete Admin User"
+        message={`Are you sure you want to delete admin user "${confirmDelete?.username}"? This action cannot be undone.`}
+        confirmText="Delete"
+        variant="danger"
+        onConfirm={() => { if (confirmDelete) handleDelete(confirmDelete); setConfirmDelete(null) }}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   )
 }

@@ -41,11 +41,14 @@ model Project {
   tags             String[]
   techStack        String[]
   durationWeeks    Int?
+  deadline         DateTime?
   createdById      String
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
   files            File[]
   createdBy        User            @relation(fields: [createdById], references: [id])
+  assignments      ProjectAssignment[]
+  tasks            Task[]
 
   @@map("projects")
 }
@@ -62,6 +65,7 @@ model Lead {
   budget    String?
   timeline  String?
   status    LeadStatus @default(NEW)
+  response  String?
   ipAddress String?
   userAgent String?
   createdAt DateTime   @default(now())
@@ -227,17 +231,21 @@ model File {
 }
 
 model Visitor {
-  id        String        @id @default(cuid())
-  ipAddress String?
-  device    VisitorDevice @default(OTHER)
-  browser   String?
-  os        String?
-  page      String?
-  referrer  String?
-  country   String?
-  city      String?
-  sessionId String?
-  createdAt DateTime      @default(now())
+  id           String        @id @default(cuid())
+  name         String?
+  ipAddress    String?
+  device       VisitorDevice @default(OTHER)
+  browser      String?
+  os           String?
+  page         String?
+  pagesVisited String[]      @default([])
+  referrer     String?
+  country      String?
+  city         String?
+  sessionId    String?
+  timeSpent    Int?          @default(0)
+  summary      String?
+  createdAt    DateTime      @default(now())
 
   @@map("visitors")
 }
@@ -255,8 +263,29 @@ model Client {
   revenue   Float        @default(0)
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
+  proposals Proposal[]
+  whatsappContacts WhatsAppContact[]
 
   @@map("clients")
+}
+
+model Proposal {
+  id          String         @id @default(cuid())
+  clientId    String
+  title       String
+  description String
+  budget      Float          @default(0)
+  currency    String         @default("USD")
+  timeline    String?
+  status      ProposalStatus @default(PENDING)
+  projectRef  String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  client      Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@index([status])
+  @@map("proposals")
 }
 
 model Employee {
@@ -266,6 +295,7 @@ model Employee {
   phone      String?
   role       String
   department String
+  skills     String[]       @default([])
   status     EmployeeStatus @default(ACTIVE)
   workload   Int            @default(0)
   salary     Float?
@@ -276,6 +306,7 @@ model Employee {
   updatedAt  DateTime       @updatedAt
   assignments ProjectAssignment[]
   shares      ProjectShare[]
+  tasks       Task[]
 
   @@map("employees")
 }
@@ -287,6 +318,7 @@ model Finance {
   description String
   category    String?
   projectRef  String?
+  received    Boolean     @default(true)
   date        DateTime    @default(now())
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
@@ -349,11 +381,35 @@ model ProjectAssignment {
   roleInProject String?
   assignedAt   DateTime @default(now())
   employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  project      Project  @relation(fields: [projectRef], references: [id], onDelete: Cascade)
 
   @@unique([projectRef, employeeId])
   @@index([projectRef])
   @@index([employeeId])
   @@map("project_assignments")
+}
+
+// ─── Tasks ──────────────────────────────────────────────────────────────────
+
+model Task {
+  id          String       @id @default(cuid())
+  projectId   String
+  title       String
+  description String?
+  status      TaskStatus   @default(TODO)
+  priority    TaskPriority @default(MEDIUM)
+  assigneeId  String?
+  dueDate     DateTime?
+  completedAt DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignee    Employee?    @relation(fields: [assigneeId], references: [id])
+
+  @@index([projectId])
+  @@index([assigneeId])
+  @@index([status])
+  @@map("tasks")
 }
 
 // ─── Project Finance (Cost Sharing) ─────────────────────────────────────────
@@ -362,6 +418,7 @@ model ProjectFinance {
   id              String   @id @default(cuid())
   projectRef      String   @unique
   totalAmount     Float
+  currency        String   @default("USD")
   fiverrFeePercent Float   @default(0)
   zakatEnabled    Boolean  @default(false)
   zakatPercent    Float    @default(2.5)
@@ -417,6 +474,100 @@ model EmailLog {
   @@map("email_logs")
 }
 
+// ─── WhatsApp CRM ───────────────────────────────────────────────────────────
+
+model WhatsAppContact {
+  id             String               @id @default(cuid())
+  name           String?
+  phone          String               @unique
+  linkedClientId String?
+  linkedClient   Client?              @relation(fields: [linkedClientId], references: [id])
+  tags           WhatsAppContactTag[] @default([LEAD])
+  notes          String?
+  lastMessageAt  DateTime?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  messages       WhatsAppMessage[]
+  conversations  WhatsAppConversation[]
+
+  @@index([phone])
+  @@index([linkedClientId])
+  @@map("whatsapp_contacts")
+}
+
+model WhatsAppMessage {
+  id             String              @id @default(cuid())
+  contactId      String
+  contact        WhatsAppContact     @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  conversationId String?
+  conversation   WhatsAppConversation? @relation(fields: [conversationId], references: [id])
+  direction      MessageDirection
+  body           String
+  twilioSid      String?
+  status         WhatsAppMsgStatus   @default(SENT)
+  createdAt      DateTime            @default(now())
+
+  @@index([contactId])
+  @@index([conversationId])
+  @@index([createdAt])
+  @@map("whatsapp_messages")
+}
+
+model WhatsAppConversation {
+  id        String             @id @default(cuid())
+  contactId String
+  contact   WhatsAppContact    @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  status    ConversationStatus @default(OPEN)
+  closedAt  DateTime?
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  messages  WhatsAppMessage[]
+
+  @@index([contactId])
+  @@index([status])
+  @@map("whatsapp_conversations")
+}
+
+model WhatsAppLog {
+  id        String            @id @default(cuid())
+  to        String
+  body      String
+  twilioSid String?
+  status    WhatsAppMsgStatus @default(SENT)
+  error     String?
+  trigger   String?
+  createdAt DateTime          @default(now())
+
+  @@index([createdAt])
+  @@map("whatsapp_logs")
+}
+
+enum WhatsAppContactTag {
+  LEAD
+  CLIENT
+  HOT
+  COLD
+  VIP
+}
+
+enum MessageDirection {
+  INCOMING
+  OUTGOING
+}
+
+enum WhatsAppMsgStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+enum ConversationStatus {
+  OPEN
+  CLOSED
+}
+
 enum PaymentStatus {
   PENDING
   PAID
@@ -460,7 +611,16 @@ enum LeadStatus {
   NEW
   CONTACTED
   QUALIFIED
+  RESPONDED
+  IGNORED
   CLOSED
+}
+
+enum ProposalStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  STARTED
 }
 
 enum AppointmentStatus {
@@ -539,4 +699,18 @@ enum AdminRole {
   FINANCE
   MANAGER
   SUPPORT
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
 }

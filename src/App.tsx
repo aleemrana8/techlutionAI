@@ -1,5 +1,5 @@
 import { motion, useScroll, useSpring } from 'framer-motion'
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState, useCallback } from 'react'
 import AppRoutes from './routes/AppRoutes'
 import { useSmoothScroll } from './hooks/useSmoothScroll'
 import { useVisitorTracking } from './hooks/useVisitorTracking'
@@ -8,8 +8,34 @@ const ParticlesBackground = lazy(() => import('./components/animations/Particles
 const CursorGlow = lazy(() => import('./components/animations/CursorGlow'))
 const NeuralBackground = lazy(() => import('./components/animations/NeuralBackground'))
 const ThreeBackground = lazy(() => import('./components/animations/ThreeBackground'))
+const WelcomeScreen = lazy(() => import('./components/welcome/WelcomeScreen'))
 
 function App() {
+  /* ── Welcome screen: show on every fresh visit, skip only on F5 refresh ── */
+  const [showWelcome, setShowWelcome] = useState(() => {
+    // Already shown this session (e.g. returning from admin panel) → skip
+    if (sessionStorage.getItem('welcomeShown')) return false
+    // Detect refresh (F5) — skip welcome on reload only
+    const nav = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[]
+    if (nav.length > 0 && nav[0].type === 'reload') return false
+    // Fresh visit / back-forward / new tab / reopened tab → show welcome
+    return true
+  })
+
+  // Handle bfcache restoration (tab closed then reopened via Ctrl+Shift+T)
+  useEffect(() => {
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setShowWelcome(true)
+    }
+    window.addEventListener('pageshow', handlePageShow)
+    return () => window.removeEventListener('pageshow', handlePageShow)
+  }, [])
+
+  const handleWelcomeFinish = useCallback(() => {
+    sessionStorage.setItem('welcomeShown', '1')
+    setShowWelcome(false)
+  }, [])
+
   /* ── Lenis smooth scroll ── */
   useSmoothScroll()
 
@@ -31,6 +57,13 @@ function App() {
 
   return (
     <div className="relative min-h-screen">
+
+      {/* ── Welcome Screen (one-time per session) ── */}
+      {showWelcome && (
+        <Suspense fallback={null}>
+          <WelcomeScreen onFinish={handleWelcomeFinish} />
+        </Suspense>
+      )}
 
       {/* ── Scroll progress indicator ── */}
       <motion.div

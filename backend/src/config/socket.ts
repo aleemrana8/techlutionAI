@@ -61,8 +61,8 @@ export function getIO(): SocketServer | null {
 // ─── Event Emitters ──────────────────────────────────────────────────────────
 
 export type DashboardEvent =
-  | 'lead:new'
-  | 'lead:update'
+  | 'inquiry:new'
+  | 'inquiry:update'
   | 'client:new'
   | 'client:update'
   | 'project:update'
@@ -71,6 +71,8 @@ export type DashboardEvent =
   | 'visitor:new'
   | 'employee:new'
   | 'employee:update'
+  | 'task:new'
+  | 'task:update'
   | 'dashboard:refresh'
 
 export function emitDashboardEvent(event: DashboardEvent, data?: any): void {

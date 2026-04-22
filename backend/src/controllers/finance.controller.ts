@@ -8,7 +8,7 @@ import { logActivity } from '../services/activity.service'
 
 export async function create(req: AdminRequest, res: Response, next: NextFunction) {
   try {
-    const { type, amount, description, category, projectRef, date } = req.body
+    const { type, amount, description, category, projectRef, date, received } = req.body
     if (!type || amount === undefined || !description) {
       sendError(res, 'Type, amount, and description are required')
       return
@@ -24,6 +24,7 @@ export async function create(req: AdminRequest, res: Response, next: NextFunctio
         description,
         category,
         projectRef,
+        received: received !== undefined ? !!received : true,
         date: date ? new Date(date) : new Date(),
       },
     })
@@ -66,7 +67,7 @@ export async function getById(req: AdminRequest, res: Response, next: NextFuncti
 
 export async function update(req: AdminRequest, res: Response, next: NextFunction) {
   try {
-    const { type, amount, description, category, projectRef, date } = req.body
+    const { type, amount, description, category, projectRef, date, received } = req.body
     const record = await prisma.finance.update({
       where: { id: req.params.id },
       data: {
@@ -75,6 +76,7 @@ export async function update(req: AdminRequest, res: Response, next: NextFunctio
         ...(description && { description }),
         ...(category !== undefined && { category }),
         ...(projectRef !== undefined && { projectRef }),
+        ...(received !== undefined && { received: !!received }),
         ...(date && { date: new Date(date) }),
       },
     })
@@ -100,23 +102,27 @@ export async function summary(req: AdminRequest, res: Response, next: NextFuncti
       if (endDate) where.date.lte = new Date(endDate)
     }
 
-    const [incomeAgg, expenseAgg, total, recentRecords] = await Promise.all([
-      prisma.finance.aggregate({ where: { ...where, type: 'INCOME' }, _sum: { amount: true }, _count: true }),
+    const [incomeAgg, expenseAgg, total, recentRecords, pendingIncomeAgg] = await Promise.all([
+      prisma.finance.aggregate({ where: { ...where, type: 'INCOME', received: true }, _sum: { amount: true }, _count: true }),
       prisma.finance.aggregate({ where: { ...where, type: 'EXPENSE' }, _sum: { amount: true }, _count: true }),
       prisma.finance.count({ where }),
       prisma.finance.findMany({ where, take: 10, orderBy: { date: 'desc' } }),
+      prisma.finance.aggregate({ where: { ...where, type: 'INCOME', received: false }, _sum: { amount: true }, _count: true }),
     ])
 
     const totalIncome = incomeAgg._sum.amount || 0
     const totalExpenses = expenseAgg._sum.amount || 0
+    const pendingIncome = pendingIncomeAgg._sum.amount || 0
 
     sendSuccess(res, {
       totalIncome,
       totalExpenses,
+      pendingIncome,
       profit: totalIncome - totalExpenses,
       totalRecords: total,
       incomeCount: incomeAgg._count,
       expenseCount: expenseAgg._count,
+      pendingCount: pendingIncomeAgg._count,
       recentTransactions: recentRecords,
     })
   } catch (err) { next(err) }

@@ -4,6 +4,7 @@ import { Mail, Phone, MapPin, Send, CheckCircle, AlertCircle } from 'lucide-reac
 import Header from '../components/layout/Header'
 import Footer from '../components/layout/Footer'
 import Chatbot from '../components/Chatbot'
+import PhoneInput from '../components/common/PhoneInput'
 import { submitContact } from '../api/api'
 
 const contactInfo = [
@@ -13,7 +14,7 @@ const contactInfo = [
 ]
 
 export default function ContactPage() {
-  const [formData, setFormData] = useState({ name: '', email: '', phone: '', service: '', message: '' })
+  const [formData, setFormData] = useState({ name: '', email: '', phone: '', countryCode: '+92', service: '', message: '' })
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -24,9 +25,9 @@ export default function ContactPage() {
     e.preventDefault()
     setStatus('sending')
     try {
-      await submitContact(formData)
+      await submitContact({ ...formData, phone: `${formData.countryCode}${formData.phone}` })
       setStatus('sent')
-      setFormData({ name: '', email: '', phone: '', service: '', message: '' })
+      setFormData({ name: '', email: '', phone: '', countryCode: '+92', service: '', message: '' })
       setTimeout(() => setStatus('idle'), 5000)
     } catch {
       setStatus('error')
@@ -134,8 +135,13 @@ export default function ContactPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div>
                     <label className="block text-[11px] uppercase tracking-widest text-slate-500 mb-2">Phone</label>
-                    <input type="tel" name="phone" value={formData.phone} onChange={handleChange} placeholder="+92 300 1234567"
-                      className="w-full bg-slate-900 border border-white/8 text-white rounded-xl px-4 py-3.5 text-sm placeholder-slate-600 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/15 transition-all" />
+                    <PhoneInput
+                      countryCode={formData.countryCode}
+                      phone={formData.phone}
+                      onCountryCodeChange={v => setFormData(prev => ({ ...prev, countryCode: v }))}
+                      onPhoneChange={v => setFormData(prev => ({ ...prev, phone: v }))}
+                      placeholder="315 1664843"
+                    />
                   </div>
                   <div>
                     <label className="block text-[11px] uppercase tracking-widest text-slate-500 mb-2">Service Needed</label>

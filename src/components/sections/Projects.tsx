@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowRight, X, CheckCircle2, Zap, TrendingUp, Clock, Shield,
@@ -8,6 +8,8 @@ import {
 } from 'lucide-react'
 import { submitContact } from '../../api/api'
 import Toast from '../common/Toast'
+import PhoneInput, { COUNTRY_CODES } from '../common/PhoneInput'
+import { getLenis } from '../../hooks/useSmoothScroll'
 
 const projIsMobile = typeof window !== 'undefined' && window.innerWidth < 768
 
@@ -512,7 +514,7 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
   const [selectedProject, setSelectedProject] = useState<number | null>(null)
   const [activeTab, setActiveTab] = useState<'overview' | 'workflow' | 'benefits' | 'process'>('overview')
   const [showForm, setShowForm] = useState(false)
-  const [formData, setFormData] = useState({ name: '', email: '', phone: '', projectType: '', message: '' })
+  const [formData, setFormData] = useState({ name: '', email: '', phone: '', countryCode: '+92', projectType: '', message: '' })
   const [formSent, setFormSent] = useState(false)
   const [formLoading, setFormLoading] = useState(false)
   const [formError, setFormError] = useState('')
@@ -524,6 +526,19 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
   const [contactError, setContactError] = useState('')
   const [toast, setToast] = useState({ show: false, title: '', message: '' })
   const closeToast = useCallback(() => setToast(t => ({ ...t, show: false })), [])
+
+  // Lock body scroll & stop Lenis when project modal is open
+  useEffect(() => {
+    const lenis = getLenis()
+    if (selectedProject !== null) {
+      document.body.style.overflow = 'hidden'
+      lenis?.stop()
+    } else {
+      document.body.style.overflow = ''
+      lenis?.start()
+    }
+    return () => { document.body.style.overflow = ''; lenis?.start() }
+  }, [selectedProject])
 
   const filtered = activeFilter === 'All' ? projects : projects.filter((p) => p.category === activeFilter)
 
@@ -716,7 +731,7 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.25 }}
-                className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-6 bg-black/80 md:backdrop-blur-sm overflow-y-auto"
+                className="fixed inset-0 z-50 flex items-center justify-center p-2 bg-black/80 md:backdrop-blur-sm"
                 onClick={() => setSelectedProject(null)}
               >
                 <motion.div
@@ -724,11 +739,11 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.92, y: 30 }}
                   transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                  className="relative max-w-5xl w-full rounded-2xl border border-white/10 bg-slate-950/[0.98] md:bg-slate-950/98 md:backdrop-blur-xl shadow-2xl overflow-hidden my-6"
+                  className="relative max-w-5xl w-full h-[96vh] rounded-2xl border border-white/10 bg-slate-950/[0.98] md:bg-slate-950/98 md:backdrop-blur-xl shadow-2xl flex flex-col overflow-hidden"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {/* ── Hero Image ── */}
-                  <div className="relative h-72 md:h-96 overflow-hidden">
+                  <div className="relative h-36 md:h-44 flex-shrink-0 overflow-hidden">
                     <motion.img
                       src={p.image}
                       alt={p.title}
@@ -758,47 +773,47 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
                     <div className="absolute bottom-6 left-6 right-6">
                       <div className="flex items-center gap-3 mb-3">
                         <motion.div
-                          className={`w-14 h-14 rounded-xl ${p.accentBg} border border-white/10 md:backdrop-blur-sm flex items-center justify-center`}
+                          className={`w-10 h-10 rounded-lg ${p.accentBg} border border-white/10 md:backdrop-blur-sm flex items-center justify-center`}
                           initial={{ rotate: -10, scale: 0.8 }}
                           animate={{ rotate: 0, scale: 1 }}
                           transition={{ type: 'spring', stiffness: 200, delay: 0.1 }}
                         >
-                          <PIcon size={26} className={p.accent} />
+                          <PIcon size={20} className={p.accent} />
                         </motion.div>
                         <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs sm:text-[10px] text-white/50 font-mono">{p.number}</span>
-                            <span className={`text-xs sm:text-[10px] ${p.accent} uppercase tracking-[0.18em] font-semibold px-2.5 py-0.5 rounded-md ${p.accentBg} md:backdrop-blur-sm`}>
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span className="text-[10px] text-white/50 font-mono">{p.number}</span>
+                            <span className={`text-[10px] ${p.accent} uppercase tracking-[0.18em] font-semibold px-2 py-0.5 rounded-md ${p.accentBg} md:backdrop-blur-sm`}>
                               {p.badge}
                             </span>
                           </div>
-                          <h3 className="font-bold text-2xl md:text-3xl text-white">{p.title}</h3>
-                          <p className="text-white/50 text-sm italic mt-0.5">{p.tagline}</p>
+                          <h3 className="font-bold text-lg md:text-xl text-white">{p.title}</h3>
+                          <p className="text-white/50 text-xs italic">{p.tagline}</p>
                         </div>
                       </div>
                     </div>
                   </div>
 
                   {/* ── Results Strip ── */}
-                  <div className="px-6 md:px-8 -mt-4 relative z-10">
-                    <div className="grid grid-cols-4 gap-3">
+                  <div className="px-4 md:px-6 -mt-3 relative z-10 flex-shrink-0">
+                    <div className="grid grid-cols-4 gap-2">
                       {p.results.map((r, j) => (
                         <motion.div
                           key={j}
                           initial={{ opacity: 0, y: 12 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.2 + j * 0.06, duration: 0.3 }}
-                          className="text-center p-4 rounded-xl border border-white/[0.08] bg-slate-900/80 md:backdrop-blur-sm"
+                          className="text-center px-2 py-2 rounded-lg border border-white/[0.08] bg-slate-900/80 md:backdrop-blur-sm"
                         >
-                          <div className={`text-xl font-black ${p.accent}`}>{r.value}</div>
-                          <div className="text-xs sm:text-[10px] text-slate-500 font-medium mt-1">{r.label}</div>
+                          <div className={`text-base font-black ${p.accent}`}>{r.value}</div>
+                          <div className="text-[10px] text-slate-500 font-medium">{r.label}</div>
                         </motion.div>
                       ))}
                     </div>
                   </div>
 
                   {/* ── Tab Navigation ── */}
-                  <div className="px-6 md:px-8 mt-6">
+                  <div className="px-4 md:px-6 mt-3 flex-shrink-0">
                     <div className="flex gap-1 p-1 rounded-xl border border-white/[0.06] bg-white/[0.02] w-fit">
                       {([
                         { key: 'overview' as const, label: 'Overview', icon: FileText },
@@ -826,7 +841,7 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
                   </div>
 
                   {/* ── Tab Content ── */}
-                  <div className="px-6 md:px-8 py-6">
+                  <div className="px-4 md:px-6 py-3 flex-1 min-h-0 overflow-y-auto">
                     <AnimatePresence mode="wait">
                       {/* OVERVIEW TAB */}
                       {activeTab === 'overview' && (
@@ -838,57 +853,57 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
                           transition={{ duration: 0.3 }}
                         >
                           {/* Full Description */}
-                          <div className="mb-8">
-                            <h4 className="text-white font-semibold text-lg mb-3">About This Project</h4>
-                            <p className="text-slate-400 leading-relaxed text-[15px]">{p.fullDescription}</p>
+                          <div className="mb-4">
+                            <h4 className="text-white font-semibold text-sm mb-1.5">About This Project</h4>
+                            <p className="text-slate-400 leading-relaxed text-xs">{p.fullDescription}</p>
                           </div>
 
                           {/* How It Helps */}
-                          <div className="mb-8 p-5 rounded-xl border border-cyan-500/10 bg-cyan-500/[0.03]">
-                            <div className="flex items-center gap-3 mb-3">
-                              <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center">
-                                <Target size={18} className="text-cyan-400" />
+                          <div className="mb-4 p-3 rounded-xl border border-cyan-500/10 bg-cyan-500/[0.03]">
+                            <div className="flex items-center gap-2 mb-1.5">
+                              <div className="w-7 h-7 rounded-lg bg-cyan-500/10 flex items-center justify-center">
+                                <Target size={14} className="text-cyan-400" />
                               </div>
-                              <h4 className="text-white font-semibold text-lg">How This Project Helps You</h4>
+                              <h4 className="text-white font-semibold text-sm">How This Project Helps You</h4>
                             </div>
-                            <p className="text-slate-400 leading-relaxed text-[15px]">{p.howItHelps}</p>
+                            <p className="text-slate-400 leading-relaxed text-xs">{p.howItHelps}</p>
                           </div>
 
                           {/* Key Features */}
-                          <div className="mb-8">
-                            <h4 className="text-white font-semibold text-lg mb-4">Key Features</h4>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          <div className="mb-4">
+                            <h4 className="text-white font-semibold text-sm mb-2">Key Features</h4>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                               {p.features.map((f, j) => (
                                 <motion.div
                                   key={j}
                                   initial={{ opacity: 0, scale: 0.9 }}
                                   animate={{ opacity: 1, scale: 1 }}
                                   transition={{ delay: j * 0.04, duration: 0.25 }}
-                                  className="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-white/[0.06] bg-white/[0.02]"
+                                  className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border border-white/[0.06] bg-white/[0.02]"
                                 >
-                                  <CheckCircle2 size={14} className={p.accent} />
-                                  <span className="text-slate-300 text-sm font-medium">{f}</span>
+                                  <CheckCircle2 size={11} className={p.accent} />
+                                  <span className="text-slate-300 text-[11px] font-medium">{f}</span>
                                 </motion.div>
                               ))}
                             </div>
                           </div>
 
                           {/* Why Choose Us */}
-                          <div className="mb-6">
-                            <h4 className="text-white font-semibold text-lg mb-4">Why Choose Techlution AI</h4>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="mb-3">
+                            <h4 className="text-white font-semibold text-sm mb-2">Why Choose Techlution AI</h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                               {p.whyChooseUs.map((reason, j) => (
                                 <motion.div
                                   key={j}
                                   initial={{ opacity: 0, x: -12 }}
                                   animate={{ opacity: 1, x: 0 }}
                                   transition={{ delay: 0.1 + j * 0.08, duration: 0.3 }}
-                                  className="flex items-start gap-3 p-4 rounded-xl border border-white/[0.06] bg-white/[0.02]"
+                                  className="flex items-start gap-2 p-2.5 rounded-lg border border-white/[0.06] bg-white/[0.02]"
                                 >
-                                  <div className={`w-6 h-6 rounded-full ${p.accentBg} flex items-center justify-center flex-shrink-0 mt-0.5`}>
-                                    <CheckCircle2 size={12} className={p.accent} />
+                                  <div className={`w-5 h-5 rounded-full ${p.accentBg} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                                    <CheckCircle2 size={10} className={p.accent} />
                                   </div>
-                                  <span className="text-slate-400 text-sm leading-relaxed">{reason}</span>
+                                  <span className="text-slate-400 text-xs leading-relaxed">{reason}</span>
                                 </motion.div>
                               ))}
                             </div>
@@ -905,26 +920,26 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
                           exit={{ opacity: 0, y: -12 }}
                           transition={{ duration: 0.3 }}
                         >
-                          <h4 className="text-white font-semibold text-lg mb-2">Project Workflow</h4>
-                          <p className="text-slate-500 text-sm mb-6">Step-by-step process of how this solution works end-to-end.</p>
+                          <h4 className="text-white font-semibold text-sm mb-1">Project Workflow</h4>
+                          <p className="text-slate-500 text-[11px] mb-3">Step-by-step process of how this solution works end-to-end.</p>
 
-                          <div className="space-y-4">
+                          <div className="space-y-2">
                             {p.workflow.map((w, j) => (
                               <motion.div
                                 key={j}
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: j * 0.1, duration: 0.35 }}
-                                className="relative flex items-start gap-4 p-5 rounded-xl border border-white/[0.06] bg-white/[0.02] group/wf hover:border-white/[0.12] transition-all"
+                                className="relative flex items-start gap-3 p-3 rounded-lg border border-white/[0.06] bg-white/[0.02] group/wf hover:border-white/[0.12] transition-all"
                               >
                                 {/* Step number */}
-                                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${processSteps[j < 5 ? j : j % 5].color} flex items-center justify-center flex-shrink-0 shadow-lg`}>
-                                  <span className="text-white font-bold text-sm">{String(j + 1).padStart(2, '0')}</span>
+                                <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${processSteps[j < 5 ? j : j % 5].color} flex items-center justify-center flex-shrink-0 shadow-lg`}>
+                                  <span className="text-white font-bold text-[10px]">{String(j + 1).padStart(2, '0')}</span>
                                 </div>
 
                                 <div className="flex-1 min-w-0">
-                                  <h5 className="text-white font-semibold text-base mb-1.5">{w.step}</h5>
-                                  <p className="text-slate-400 text-sm leading-relaxed">{w.detail}</p>
+                                  <h5 className="text-white font-semibold text-xs mb-0.5">{w.step}</h5>
+                                  <p className="text-slate-400 text-[11px] leading-relaxed">{w.detail}</p>
                                 </div>
 
                                 {/* Connector */}
@@ -946,10 +961,10 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
                           exit={{ opacity: 0, y: -12 }}
                           transition={{ duration: 0.3 }}
                         >
-                          <h4 className="text-white font-semibold text-lg mb-2">Customer Benefits</h4>
-                          <p className="text-slate-500 text-sm mb-6">How this project delivers measurable value to your business.</p>
+                          <h4 className="text-white font-semibold text-sm mb-1">Customer Benefits</h4>
+                          <p className="text-slate-500 text-[11px] mb-3">How this project delivers measurable value to your business.</p>
 
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             {p.benefits.map((b, j) => {
                               const BIcon = b.icon
                               return (
@@ -958,15 +973,15 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
                                   initial={{ opacity: 0, y: 16 }}
                                   animate={{ opacity: 1, y: 0 }}
                                   transition={{ delay: j * 0.1, duration: 0.35 }}
-                                  className="p-5 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12] transition-all"
+                                  className="p-3 rounded-lg border border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12] transition-all"
                                 >
-                                  <div className="flex items-center gap-3 mb-3">
-                                    <div className={`w-12 h-12 rounded-xl ${p.accentBg} flex items-center justify-center`}>
-                                      <BIcon size={22} className={p.accent} />
+                                  <div className="flex items-center gap-2 mb-1.5">
+                                    <div className={`w-8 h-8 rounded-lg ${p.accentBg} flex items-center justify-center`}>
+                                      <BIcon size={16} className={p.accent} />
                                     </div>
-                                    <h5 className="text-white font-semibold text-base">{b.title}</h5>
+                                    <h5 className="text-white font-semibold text-xs">{b.title}</h5>
                                   </div>
-                                  <p className="text-slate-400 text-sm leading-relaxed">{b.desc}</p>
+                                  <p className="text-slate-400 text-[11px] leading-relaxed">{b.desc}</p>
                                 </motion.div>
                               )
                             })}
@@ -977,15 +992,15 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
                             initial={{ opacity: 0, y: 12 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.5, duration: 0.3 }}
-                            className="mt-6 p-5 rounded-xl border border-emerald-500/10 bg-emerald-500/[0.03]"
+                            className="mt-4 p-3 rounded-lg border border-emerald-500/10 bg-emerald-500/[0.03]"
                           >
-                            <div className="flex items-center gap-3 mb-3">
-                              <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                                <Target size={18} className="text-emerald-400" />
+                            <div className="flex items-center gap-2 mb-1.5">
+                              <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                                <Target size={14} className="text-emerald-400" />
                               </div>
-                              <h4 className="text-white font-semibold">The Bottom Line</h4>
+                              <h4 className="text-white font-semibold text-sm">The Bottom Line</h4>
                             </div>
-                            <p className="text-slate-400 leading-relaxed text-sm">{p.howItHelps}</p>
+                            <p className="text-slate-400 leading-relaxed text-xs">{p.howItHelps}</p>
                           </motion.div>
                         </motion.div>
                       )}
@@ -999,10 +1014,10 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
                           exit={{ opacity: 0, y: -12 }}
                           transition={{ duration: 0.3 }}
                         >
-                          <h4 className="text-white font-semibold text-lg mb-2">How We Built It</h4>
-                          <p className="text-slate-500 text-sm mb-6">Our proven 5-step development process for this project.</p>
+                          <h4 className="text-white font-semibold text-sm mb-1">How We Built It</h4>
+                          <p className="text-slate-500 text-[11px] mb-3">Our proven 5-step development process for this project.</p>
 
-                          <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
                             {processSteps.map((step, j) => {
                               const SIcon = step.icon
                               return (
@@ -1011,16 +1026,16 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
                                   initial={{ opacity: 0, y: 16 }}
                                   animate={{ opacity: 1, y: 0 }}
                                   transition={{ delay: j * 0.12, duration: 0.35 }}
-                                  className="relative p-4 rounded-xl border border-white/[0.06] bg-white/[0.02] text-center"
+                                  className="relative p-3 rounded-lg border border-white/[0.06] bg-white/[0.02] text-center"
                                 >
-                                  <div className="absolute -top-2 -left-1 text-xs sm:text-[10px] font-mono text-slate-600 bg-slate-950 px-1.5 rounded">
+                                  <div className="absolute -top-2 -left-1 text-[9px] font-mono text-slate-600 bg-slate-950 px-1 rounded">
                                     {String(j + 1).padStart(2, '0')}
                                   </div>
-                                  <div className={`w-11 h-11 mx-auto rounded-lg bg-gradient-to-br ${step.color} flex items-center justify-center mb-3 shadow-lg`}>
-                                    <SIcon size={18} className="text-white" />
+                                  <div className={`w-8 h-8 mx-auto rounded-lg bg-gradient-to-br ${step.color} flex items-center justify-center mb-2 shadow-lg`}>
+                                    <SIcon size={14} className="text-white" />
                                   </div>
-                                  <div className="text-white text-xs font-semibold mb-2">{step.title}</div>
-                                  <p className="text-slate-500 text-xs sm:text-[11px] leading-relaxed">
+                                  <div className="text-white text-[11px] font-semibold mb-1">{step.title}</div>
+                                  <p className="text-slate-500 text-[10px] leading-relaxed">
                                     {p.process[j]}
                                   </p>
                                   {j < 4 && (
@@ -1034,21 +1049,21 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
                           </div>
 
                           {/* Why Choose Us in process tab */}
-                          <div className="mt-8">
-                            <h4 className="text-white font-semibold mb-4">Why Techlution AI for This Project</h4>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="mt-4">
+                            <h4 className="text-white font-semibold text-sm mb-2">Why Techlution AI for This Project</h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                               {p.whyChooseUs.map((reason, j) => (
                                 <motion.div
                                   key={j}
                                   initial={{ opacity: 0, x: -12 }}
                                   animate={{ opacity: 1, x: 0 }}
                                   transition={{ delay: 0.5 + j * 0.08, duration: 0.3 }}
-                                  className="flex items-start gap-3 p-3 rounded-xl border border-white/[0.06] bg-white/[0.02]"
+                                  className="flex items-start gap-2 p-2 rounded-lg border border-white/[0.06] bg-white/[0.02]"
                                 >
-                                  <div className={`w-6 h-6 rounded-full ${p.accentBg} flex items-center justify-center flex-shrink-0 mt-0.5`}>
-                                    <Star size={10} className={p.accent} />
+                                  <div className={`w-5 h-5 rounded-full ${p.accentBg} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                                    <Star size={8} className={p.accent} />
                                   </div>
-                                  <span className="text-slate-400 text-sm leading-relaxed">{reason}</span>
+                                  <span className="text-slate-400 text-xs leading-relaxed">{reason}</span>
                                 </motion.div>
                               ))}
                             </div>
@@ -1059,25 +1074,25 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
                   </div>
 
                   {/* ── CTA Footer with Quick Inquiry Form ── */}
-                  <div className="px-6 md:px-8 pb-6">
+                  <div className="px-4 md:px-6 pb-4 flex-shrink-0">
                     {!showForm ? (
-                      <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center justify-between gap-3">
                         <motion.button
                           onClick={() => { setSelectedProject(null); onContactUs?.() }}
                           whileHover={{ scale: 1.03 }}
                           whileTap={{ scale: 0.97 }}
-                          className="flex-1 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-violet-500 text-white font-semibold px-6 py-3 rounded-xl shadow-lg text-sm"
+                          className="flex-1 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-violet-500 text-white font-semibold px-5 py-2.5 rounded-xl shadow-lg text-xs"
                         >
-                          <MessageSquare size={14} />
+                          <MessageSquare size={13} />
                           Let's Talk
                         </motion.button>
                         <motion.button
                           onClick={() => { setSelectedProject(null); onStartProject?.() }}
                           whileHover={{ scale: 1.03 }}
                           whileTap={{ scale: 0.97 }}
-                          className="flex-1 inline-flex items-center justify-center gap-2 border border-orange-500/30 hover:border-orange-400/60 hover:bg-orange-500/[0.08] text-orange-400 font-semibold px-6 py-3 rounded-xl text-sm transition-all"
+                          className="flex-1 inline-flex items-center justify-center gap-2 border border-orange-500/30 hover:border-orange-400/60 hover:bg-orange-500/[0.08] text-orange-400 font-semibold px-5 py-2.5 rounded-xl text-xs transition-all"
                         >
-                          <Rocket size={14} />
+                          <Rocket size={13} />
                           Start a Project
                         </motion.button>
                       </div>
@@ -1144,14 +1159,16 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
                               </div>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                              <div className="relative">
-                                <Phone size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                                <input
-                                  type="tel"
-                                  placeholder="Contact Number *"
-                                  value={formData.phone}
-                                  onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                                  className="w-full pl-9 pr-3 py-2.5 text-sm bg-white/[0.04] border border-white/[0.08] rounded-lg text-white placeholder:text-slate-600 focus:border-cyan-500/30 focus:outline-none transition-colors"
+                              <div>
+                                <PhoneInput
+                                  countryCode={formData.countryCode}
+                                  phone={formData.phone}
+                                  onCountryCodeChange={v => setFormData(prev => ({ ...prev, countryCode: v }))}
+                                  onPhoneChange={v => setFormData(prev => ({ ...prev, phone: v }))}
+                                  accent="cyan"
+                                  size="sm"
+                                  required
+                                  placeholder="315 1664843"
                                 />
                               </div>
                               <div className="relative">
@@ -1198,12 +1215,12 @@ export default function Projects({ onContactUs, onStartProject }: { onContactUs?
                                   await submitContact({
                                     name: formData.name,
                                     email: formData.email,
-                                    phone: formData.phone,
+                                    phone: `${formData.countryCode}${formData.phone}`,
                                     service: `${formData.projectType} — ${p.title}`,
                                     message: formData.message,
                                   })
                                   setFormSent(true)
-                                  setFormData({ name: '', email: '', phone: '', projectType: '', message: '' })
+                                  setFormData({ name: '', email: '', phone: '', countryCode: '+92', projectType: '', message: '' })
                                   setToast({ show: true, title: 'Inquiry Sent! 🚀', message: 'Thank you for your interest. Our team will get back to you within 24 hours.' })
                                 } catch {
                                   setFormError('Failed to send. Please try again or email us directly at raleem811811@gmail.com')

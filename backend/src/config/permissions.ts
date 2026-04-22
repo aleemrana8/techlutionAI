@@ -5,7 +5,7 @@ export type AdminRoleName = 'SUPER_ADMIN' | 'ADMIN' | 'HR' | 'FINANCE' | 'MANAGE
 export interface RolePermissions {
   dashboard: boolean
   visitors: { read: boolean; write: boolean }
-  leads: { read: boolean; write: boolean }
+  inquiries: { read: boolean; write: boolean }
   clients: { read: boolean; write: boolean }
   employees: { read: boolean; write: boolean }
   finance: { read: boolean; write: boolean }
@@ -24,7 +24,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, RolePermissions> = {
   SUPER_ADMIN: {
     dashboard: true,
     visitors: fullAccess,
-    leads: fullAccess,
+    inquiries: fullAccess,
     clients: fullAccess,
     employees: fullAccess,
     finance: fullAccess,
@@ -37,7 +37,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, RolePermissions> = {
   ADMIN: {
     dashboard: true,
     visitors: fullAccess,
-    leads: fullAccess,
+    inquiries: fullAccess,
     clients: fullAccess,
     employees: fullAccess,
     finance: fullAccess,
@@ -50,7 +50,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, RolePermissions> = {
   HR: {
     dashboard: true,
     visitors: noAccess,
-    leads: noAccess,
+    inquiries: noAccess,
     clients: noAccess,
     employees: fullAccess,
     finance: readOnly,
@@ -63,7 +63,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, RolePermissions> = {
   FINANCE: {
     dashboard: true,
     visitors: noAccess,
-    leads: readOnly,
+    inquiries: readOnly,
     clients: readOnly,
     employees: readOnly,
     finance: fullAccess,
@@ -76,7 +76,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, RolePermissions> = {
   MANAGER: {
     dashboard: true,
     visitors: readOnly,
-    leads: readOnly,
+    inquiries: readOnly,
     clients: readOnly,
     employees: readOnly,
     finance: readOnly,
@@ -89,7 +89,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleName, RolePermissions> = {
   SUPPORT: {
     dashboard: true,
     visitors: noAccess,
-    leads: readOnly,
+    inquiries: readOnly,
     clients: readOnly,
     employees: noAccess,
     finance: noAccess,

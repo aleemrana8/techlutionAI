@@ -79,8 +79,6 @@ export default function SettingsPage() {
               data-setting="email"
               defaultValue="raleem811811@gmail.com"
               className={`w-full ${inputClass} border text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-cyan-500/30 transition-all`}
-              defaultValue="raleem811811@gmail.com"
-              className={`w-full ${inputClass} border text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-cyan-500/30 transition-all`}
             />
           </div>
         </div>

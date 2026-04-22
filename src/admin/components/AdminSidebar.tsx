@@ -4,22 +4,25 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Users, UserCheck, Briefcase, DollarSign,
   FolderKanban, MessageSquare, Settings, LogOut, ChevronLeft,
-  ChevronRight, Shield, ExternalLink, BarChart3, Activity, UserCog, FileText,
+  ChevronRight, Shield, ExternalLink, BarChart3, Activity, UserCog, FileText, FileSignature,
+  MessageCircle, Megaphone,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 const NAV_ITEMS = [
   { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true, permission: 'dashboard' as const },
   { to: '/admin/visitors', icon: Users, label: 'Visitors', permission: 'visitors' as const },
-  { to: '/admin/clients', icon: UserCheck, label: 'Clients', permission: 'clients' as const },
-  { to: '/admin/leads', icon: MessageSquare, label: 'Inquiries', permission: 'leads' as const },
-  { to: '/admin/hr', icon: Briefcase, label: 'HR', permission: 'employees' as const },
+  { to: '/admin/inquiries', icon: MessageSquare, label: 'Inquiries', permission: 'inquiries' as const },
+  { to: '/admin/proposals', icon: FileSignature, label: 'Proposals', permission: 'inquiries' as const },
+  { to: '/admin/members', icon: Briefcase, label: 'Members', permission: 'employees' as const },
   { to: '/admin/finance', icon: DollarSign, label: 'Finance', permission: 'finance' as const },
   { to: '/admin/projects', icon: FolderKanban, label: 'Projects', permission: 'projects' as const },
   { to: '/admin/analytics', icon: BarChart3, label: 'Analytics', permission: 'analytics' as const },
   { to: '/admin/logs', icon: Activity, label: 'Activity Logs', permission: 'logs' as const },
   { to: '/admin/users', icon: UserCog, label: 'Admin Users', permission: 'adminUsers' as const },
   { to: '/admin/reports', icon: FileText, label: 'Reports', permission: 'analytics' as const },
+  { to: '/admin/whatsapp', icon: MessageCircle, label: 'WhatsApp Chat', permission: 'inquiries' as const },
+  { to: '/admin/whatsapp-broadcast', icon: Megaphone, label: 'Broadcast', permission: 'inquiries' as const },
   { to: '/admin/settings', icon: Settings, label: 'Settings', permission: 'settings' as const },
 ]
 

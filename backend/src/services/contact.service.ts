@@ -1,5 +1,6 @@
 import * as contactRepo from '../repositories/contact.repository'
 import { sendMail, contactAdminEmail, contactConfirmationEmail, projectRequestAdminEmail, projectConfirmationEmail } from './email.service'
+import { notifyAdmin, findOrCreateContact, waTemplates } from './whatsapp.service'
 import { LeadStatus } from '@prisma/client'
 import { getPagination, buildPaginationMeta } from '../types'
 
@@ -32,6 +33,12 @@ export async function submitContact(input: {
     subject: 'Thank you for reaching out – Techlution AI',
     html: contactConfirmationEmail(input.name),
   })
+
+  // WhatsApp: notify admin about new inquiry
+  void notifyAdmin(waTemplates.newInquiry(input.name, input.message), 'new_inquiry')
+
+  // WhatsApp: create CRM contact if phone provided
+  if (input.phone) void findOrCreateContact(input.phone, input.name)
 
   return lead
 }
@@ -80,6 +87,14 @@ export async function submitProjectRequest(input: {
       html: projectConfirmationEmail(input.name, input.service, input.budget, input.timeline),
     })
   }
+
+  // WhatsApp: notify admin about project proposal
+  void notifyAdmin(
+    `🚀 *New Project Proposal*\n\n👤 ${input.name}\n📋 Service: ${input.service}\n💰 Budget: ${input.budget || 'N/A'}\n⏰ Timeline: ${input.timeline || 'N/A'}\n\n💬 ${input.message.substring(0, 200)}`,
+    'new_project_request'
+  )
+
+  if (input.phone) void findOrCreateContact(input.phone, input.name)
 
   return lead
 }

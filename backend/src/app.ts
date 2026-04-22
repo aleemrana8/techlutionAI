@@ -21,6 +21,7 @@ import healthcareRoutes from './routes/healthcare.routes'
 import workflowRoutes from './routes/workflow.routes'
 import uploadRoutes from './routes/upload.routes'
 import adminRoutes from './routes/admin.routes'
+import { incomingWebhook, statusCallback } from './controllers/whatsapp.controller'
 import {
   initEmbeddings, vectorSearch, getKeywordContext,
   detectLanguage, getMemory, addMemory, formatHistory,
@@ -159,19 +160,59 @@ app.get('/api/admin/verify', async (req, res) => {
 // Admin CRUD routes (requires auth)
 app.use('/api/admin', adminRoutes)
 
+// --- WhatsApp Webhook (public — Twilio calls this) ---
+app.post('/api/whatsapp/webhook', incomingWebhook)
+app.post('/api/whatsapp/status', statusCallback)
+
 // --- Public Visitor Tracking ---
 app.post('/api/visitor', async (req, res) => {
   try {
-    const { device, browser, os, page, referrer, sessionId } = req.body
+    const { name, device, browser, os, page, pagesVisited, summary, referrer, sessionId } = req.body
+
+    // Geo-locate visitor from IP
+    let country: string | undefined
+    let city: string | undefined
+    const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || req.socket.remoteAddress
+    try {
+      const cleanIp = clientIp?.replace('::ffff:', '') || ''
+      if (cleanIp && cleanIp !== '127.0.0.1' && cleanIp !== '::1') {
+        const geoRes = await fetch(`http://ip-api.com/json/${cleanIp}?fields=country,city`)
+        if (geoRes.ok) { const geo = await geoRes.json() as any; country = geo.country; city = geo.city }
+      }
+    } catch { /* geo optional */ }
+
+    // If same session exists, update it (merge pages visited)
+    if (sessionId) {
+      const existing = await prisma.visitor.findFirst({
+        where: { sessionId },
+        orderBy: { createdAt: 'desc' },
+      })
+      if (existing) {
+        const merged = Array.from(new Set([...(existing.pagesVisited || []), ...(pagesVisited || [])]))
+        const updatedSummary = merged.join(' → ')
+        const updated = await prisma.visitor.update({
+          where: { id: existing.id },
+          data: {
+            page, pagesVisited: merged, summary: updatedSummary,
+            ...(name && { name }), ...(country && { country }), ...(city && { city }),
+          },
+        })
+        try { const { emitDashboardEvent } = await import('./config/socket'); emitDashboardEvent('visitor:new', { id: updated.id, page, device, summary: updatedSummary }) } catch { /* */ }
+        res.status(200).json({ success: true, data: { id: updated.id } })
+        return
+      }
+    }
+
     const visitor = await prisma.visitor.create({
       data: {
-        ipAddress: req.ip || req.socket.remoteAddress,
+        ipAddress: clientIp,
+        name: name || null,
         device: ['DESKTOP', 'MOBILE', 'TABLET'].includes(device) ? device : 'OTHER',
-        browser, os, page, referrer, sessionId,
+        browser, os, page, pagesVisited: pagesVisited || [], summary: summary || '', referrer, sessionId,
+        country: country || null, city: city || null,
       },
     })
-    // Socket.IO emit (skip in serverless)
-    try { const { emitDashboardEvent } = await import('./config/socket'); emitDashboardEvent('visitor:new', { id: visitor.id, page, device }) } catch { /* socket optional in serverless */ }
+    try { const { emitDashboardEvent } = await import('./config/socket'); emitDashboardEvent('visitor:new', { id: visitor.id, page, device }) } catch { /* */ }
     res.status(201).json({ success: true, data: { id: visitor.id } })
   } catch { res.status(500).json({ success: false, message: 'Failed to log visitor' }) }
 })
@@ -184,7 +225,7 @@ app.post('/api/chat', async (req, res) => {
     if (!message || typeof message !== 'string') { res.status(400).json({ success: false, message: 'message is required' }); return }
 
     const sid = typeof sessionId === 'string' ? sessionId : 'default'
-    const intent = detectIntent(message)
+    const { intent, relevance, userIntent } = detectIntent(message)
     const language = detectLanguage(message)
     const memory = getMemory(sid)
     const history = formatHistory(memory)
@@ -193,7 +234,7 @@ app.post('/api/chat', async (req, res) => {
     try { context = await vectorSearch(message) } catch { context = getKeywordContext(message) }
 
     const systemPrompt = buildSystemPrompt(language)
-    const enhancedPrompt = buildFinalPrompt({ message, intent, context, history, language })
+    const enhancedPrompt = buildFinalPrompt({ message, intent, relevance, userIntent, context, history, language })
 
     // --- Try OpenAI first (gpt-4o-mini — fast, smart, reliable) ---
     if (process.env.OPENAI_API_KEY) {
@@ -262,7 +303,7 @@ app.get('/api/chat-stream', async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.flushHeaders()
 
-  const intent = detectIntent(message)
+  const { intent, relevance, userIntent } = detectIntent(message)
   const language = detectLanguage(message)
   const memory = getMemory(sid)
   const history = formatHistory(memory)
@@ -270,8 +311,8 @@ app.get('/api/chat-stream', async (req, res) => {
   try { context = await vectorSearch(message) } catch { context = getKeywordContext(message) }
 
   const systemPrompt = buildSystemPrompt(language)
-  const enhancedPrompt = buildFinalPrompt({ message, intent, context, history, language })
-  res.write('data: ' + JSON.stringify({ type: 'meta', intent, language }) + '\n\n')
+  const enhancedPrompt = buildFinalPrompt({ message, intent, relevance, userIntent, context, history, language })
+  res.write('data: ' + JSON.stringify({ type: 'meta', intent, relevance, userIntent, language }) + '\n\n')
 
   let fullReply = ''
 

@@ -21,7 +21,7 @@ const PRIORITY_STYLES = {
 }
 
 const TYPE_ICONS: Record<string, any> = {
-  leads: Lightbulb,
+  inquiries: Lightbulb,
   workload: Users,
   finance: DollarSign,
   payouts: DollarSign,

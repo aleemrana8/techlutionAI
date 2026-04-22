@@ -48,7 +48,7 @@ export default function AdminHeader({ onMobileMenuToggle, mobileMenuOpen }: { on
   // Listen for real-time events and add to notifications
   useDashboardSocket((event: any, _data: any) => {
     const messages: Record<string, string> = {
-      'lead:new': '📥 New lead received',
+      'inquiry:new': '📥 New inquiry received',
       'visitor:new': '👁 New visitor detected',
       'client:new': '🤝 New client added',
       'project:update': '📋 Project updated',

@@ -37,8 +37,8 @@ export function useSocket() {
 }
 
 export type DashboardEvent =
-  | 'lead:new'
-  | 'lead:update'
+  | 'inquiry:new'
+  | 'inquiry:update'
   | 'client:new'
   | 'client:update'
   | 'project:update'
@@ -58,7 +58,7 @@ export function useDashboardSocket(onEvent: (event: DashboardEvent, data: any) =
     if (!s.connected) s.connect()
 
     const events: DashboardEvent[] = [
-      'lead:new', 'lead:update', 'client:new', 'client:update',
+      'inquiry:new', 'inquiry:update', 'client:new', 'client:update',
       'project:update', 'finance:new', 'finance:update',
       'visitor:new', 'employee:new', 'employee:update', 'dashboard:refresh',
     ]

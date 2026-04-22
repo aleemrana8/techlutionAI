@@ -42,6 +42,15 @@ function getSessionId(): string {
   return sessionId
 }
 
+function getPageName(path: string): string {
+  if (path === '/') return 'Home'
+  if (path === '/contact') return 'Contact'
+  if (path === '/projects') return 'Projects'
+  if (path.startsWith('/projects/')) return 'Project Details'
+  const clean = path.replace(/^\//, '').replace(/-/g, ' ')
+  return clean.charAt(0).toUpperCase() + clean.slice(1)
+}
+
 export function useVisitorTracking() {
   const location = useLocation()
   const tracked = useRef(new Set<string>())
@@ -54,11 +63,20 @@ export function useVisitorTracking() {
     if (tracked.current.has(pageKey)) return
     tracked.current.add(pageKey)
 
+    // Build journey from all tracked pages
+    const journeyKey = `visitor_journey_${getSessionId()}`
+    const journey: string[] = JSON.parse(sessionStorage.getItem(journeyKey) || '[]')
+    const pageName = getPageName(location.pathname)
+    if (!journey.includes(pageName)) journey.push(pageName)
+    sessionStorage.setItem(journeyKey, JSON.stringify(journey))
+
     const payload = {
       device: getDeviceType(),
       browser: getBrowser(),
       os: getOS(),
       page: location.pathname,
+      pagesVisited: journey,
+      summary: journey.join(' → '),
       referrer: document.referrer || '',
       sessionId: getSessionId(),
     }

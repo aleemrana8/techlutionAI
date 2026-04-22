@@ -42,7 +42,7 @@ export async function overview(_req: AdminRequest, res: Response, next: NextFunc
 
     sendSuccess(res, {
       visitors: { total: totalVisitors, today: todayVisitors, thisWeek: weekVisitors },
-      leads: { total: totalLeads, new: newLeads, converted: convertedLeads, conversionRate },
+      inquiries: { total: totalLeads, new: newLeads, converted: convertedLeads, conversionRate },
       clients: { total: totalClients, active: activeClients },
       employees: { total: totalEmployees, active: activeEmployees },
       projects: { total: totalProjects },
@@ -356,7 +356,7 @@ export async function recommendations(_req: AdminRequest, res: Response, next: N
     const recs: { priority: 'high' | 'medium' | 'low'; type: string; message: string; action?: string; route?: string }[] = []
 
     if (newLeads > 0) {
-      recs.push({ priority: newLeads > 5 ? 'high' : 'medium', type: 'leads', message: `Follow up on ${newLeads} pending leads`, action: 'View Leads', route: '/admin/leads' })
+      recs.push({ priority: newLeads > 5 ? 'high' : 'medium', type: 'inquiries', message: `Follow up on ${newLeads} pending inquiries`, action: 'View Inquiries', route: '/admin/inquiries' })
     }
 
     for (const emp of overloaded) {

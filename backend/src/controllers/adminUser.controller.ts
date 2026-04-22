@@ -264,14 +264,14 @@ export async function dashboardSummary(req: AdminRequest, res: Response, next: N
 
     sendSuccess(res, {
       visitors: { total: totalVisitors, today: todayVisitors },
-      leads: { total: totalLeads, new: newLeads, converted: convertedLeads, conversionRate },
+      inquiries: { total: totalLeads, new: newLeads, converted: convertedLeads, conversionRate },
       clients: { total: totalClients, active: activeClients },
       employees: { total: totalEmployees, active: activeEmployees },
       projects: { total: totalProjects },
       finance: { income: totalIncome, expenses: totalExpenses, profit: totalIncome - totalExpenses },
       pendingTasks,
       conversionRate,
-      recentLeads,
+      recentInquiries: recentLeads,
       recentVisitors,
     })
   } catch (err) { next(err) }
@@ -296,11 +296,11 @@ export async function dashboardTrends(req: AdminRequest, res: Response, next: Ne
 
     const trends = await Promise.all(
       months.map(async (m) => {
-        const [visitors, leads] = await Promise.all([
+        const [visitors, inquiries] = await Promise.all([
           prisma.visitor.count({ where: { createdAt: { gte: m.start, lt: m.end } } }),
           prisma.lead.count({ where: { createdAt: { gte: m.start, lt: m.end } } }),
         ])
-        return { name: m.name, visitors, leads }
+        return { name: m.name, visitors, inquiries }
       })
     )
 

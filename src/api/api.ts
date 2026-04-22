@@ -31,7 +31,21 @@ export const submitContact = (data: {
   phone?: string
   service?: string
   message: string
-}) => API.post('/contact', data)
+  attachments?: File[]
+}) => {
+  if (data.attachments && data.attachments.length > 0) {
+    const fd = new FormData()
+    fd.append('name', data.name)
+    if (data.email) fd.append('email', data.email)
+    if (data.phone) fd.append('phone', data.phone)
+    if (data.service) fd.append('service', data.service)
+    fd.append('message', data.message)
+    data.attachments.forEach(f => fd.append('attachments', f))
+    return API.post('/contact', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+  }
+  const { attachments, ...rest } = data
+  return API.post('/contact', rest)
+}
 
 export const submitProject = (data: {
   name: string
@@ -41,7 +55,23 @@ export const submitProject = (data: {
   budget?: string
   timeline?: string
   message: string
-}) => API.post('/contact/project', data)
+  attachments?: File[]
+}) => {
+  if (data.attachments && data.attachments.length > 0) {
+    const fd = new FormData()
+    fd.append('name', data.name)
+    if (data.email) fd.append('email', data.email)
+    if (data.phone) fd.append('phone', data.phone)
+    fd.append('service', data.service)
+    if (data.budget) fd.append('budget', data.budget)
+    if (data.timeline) fd.append('timeline', data.timeline)
+    fd.append('message', data.message)
+    data.attachments.forEach(f => fd.append('attachments', f))
+    return API.post('/contact/project', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+  }
+  const { attachments, ...rest } = data
+  return API.post('/contact/project', rest)
+}
 
 // ─── Chat ────────────────────────────────────────────────────────────────────
 

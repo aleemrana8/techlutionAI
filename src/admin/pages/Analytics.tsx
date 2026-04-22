@@ -6,7 +6,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
 import {
-  getAnalyticsOverview, getLeadAnalytics, getVisitorAnalytics,
+  getAnalyticsOverview, getInquiryAnalytics, getVisitorAnalytics,
   getFinanceAnalytics, getProjectAnalytics, getHRAnalytics,
 } from '../../api/adminApi'
 
@@ -14,7 +14,7 @@ const COLORS = ['#06b6d4', '#8b5cf6', '#f97316', '#10b981', '#f43f5e', '#64748b'
 
 const tabs = [
   { id: 'overview', label: 'Overview', icon: BarChart3 },
-  { id: 'leads', label: 'Leads', icon: TrendingUp },
+  { id: 'inquiries', label: 'Inquiries', icon: TrendingUp },
   { id: 'visitors', label: 'Visitors', icon: Users },
   { id: 'finance', label: 'Finance', icon: DollarSign },
   { id: 'projects', label: 'Projects', icon: FolderKanban },
@@ -32,7 +32,7 @@ export default function Analytics() {
     setLoading(true)
     const fetchers: Record<Tab, () => Promise<any>> = {
       overview: () => getAnalyticsOverview().then(r => r.data.data),
-      leads: () => getLeadAnalytics().then(r => r.data.data),
+      inquiries: () => getInquiryAnalytics().then(r => r.data.data),
       visitors: () => getVisitorAnalytics().then(r => r.data.data),
       finance: () => getFinanceAnalytics().then(r => r.data.data),
       projects: () => getProjectAnalytics().then(r => r.data.data),
@@ -84,7 +84,7 @@ export default function Analytics() {
           className="space-y-6"
         >
           {activeTab === 'overview' && <OverviewPanel data={data} />}
-          {activeTab === 'leads' && <LeadsPanel data={data} />}
+          {activeTab === 'inquiries' && <InquiriesPanel data={data} />}
           {activeTab === 'visitors' && <VisitorsPanel data={data} />}
           {activeTab === 'finance' && <FinancePanel data={data} />}
           {activeTab === 'projects' && <ProjectsPanel data={data} />}
@@ -125,7 +125,7 @@ function OverviewPanel({ data }: { data: any }) {
   return (
     <>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard label="Total Leads" value={data.totalLeads ?? 0} color="cyan" />
+        <KPICard label="Total Inquiries" value={data.inquiries?.total ?? 0} color="cyan" />
         <KPICard label="Total Clients" value={data.totalClients ?? 0} color="violet" />
         <KPICard label="Total Visitors" value={data.totalVisitors ?? 0} color="emerald" />
         <KPICard label="Conversion Rate" value={`${data.conversionRate ?? 0}%`} color="orange" />
@@ -134,13 +134,13 @@ function OverviewPanel({ data }: { data: any }) {
   )
 }
 
-function LeadsPanel({ data }: { data: any }) {
+function InquiriesPanel({ data }: { data: any }) {
   const statusData = data.byStatus ? Object.entries(data.byStatus).map(([k, v]) => ({ name: k, value: v })) : []
   const dailyData = data.dailyTrend || []
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <ChartCard title="Leads by Status">
+      <ChartCard title="Inquiries by Status">
         <ResponsiveContainer width="100%" height={250}>
           <PieChart>
             <Pie data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label>
@@ -151,7 +151,7 @@ function LeadsPanel({ data }: { data: any }) {
           </PieChart>
         </ResponsiveContainer>
       </ChartCard>
-      <ChartCard title="Daily Lead Trend">
+      <ChartCard title="Daily Inquiry Trend">
         <ResponsiveContainer width="100%" height={250}>
           <AreaChart data={dailyData}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />

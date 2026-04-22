@@ -8,7 +8,7 @@ import * as pfService from '../services/projectFinance.service'
 export async function calculate(req: AdminRequest, res: Response, next: NextFunction) {
   try {
     const {
-      projectRef, totalAmount, fiverrFeePercent, zakatEnabled,
+      projectRef, totalAmount, currency, fiverrFeePercent, zakatEnabled,
       zakatPercent, otherCosts, founderIncluded, teamMemberIds,
     } = req.body
 
@@ -20,6 +20,7 @@ export async function calculate(req: AdminRequest, res: Response, next: NextFunc
     const result = await pfService.calculateSharing({
       projectRef,
       totalAmount: parseFloat(totalAmount),
+      currency,
       fiverrFeePercent: fiverrFeePercent != null ? parseFloat(fiverrFeePercent) : undefined,
       zakatEnabled,
       zakatPercent: zakatPercent != null ? parseFloat(zakatPercent) : undefined,

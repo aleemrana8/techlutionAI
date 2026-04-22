@@ -8,14 +8,14 @@ export async function createProject(data: Prisma.ProjectCreateInput) {
 export async function findProjectById(id: string) {
   return prisma.project.findUnique({
     where: { id },
-    include: { createdBy: { select: { id: true, name: true, email: true } }, files: true },
+    include: { createdBy: { select: { id: true, name: true, email: true } }, files: true, assignments: { include: { employee: { select: { id: true, name: true, email: true, role: true, department: true, isFounder: true, phone: true } } } } },
   })
 }
 
 export async function findProjectBySlug(slug: string) {
   return prisma.project.findUnique({
     where: { slug },
-    include: { createdBy: { select: { id: true, name: true, email: true } }, files: true },
+    include: { createdBy: { select: { id: true, name: true, email: true } }, files: true, assignments: { include: { employee: { select: { id: true, name: true, email: true, role: true, department: true, isFounder: true, phone: true } } } } },
   })
 }
 
@@ -53,7 +53,11 @@ export async function listProjects(params: {
       skip,
       take,
       orderBy: { createdAt: 'desc' },
-      include: { createdBy: { select: { id: true, name: true, email: true } }, files: true },
+      include: {
+        createdBy: { select: { id: true, name: true, email: true } },
+        files: true,
+        assignments: { include: { employee: { select: { id: true, name: true, email: true, role: true, department: true, isFounder: true, phone: true } } } },
+      },
     }),
     prisma.project.count({ where }),
   ])
