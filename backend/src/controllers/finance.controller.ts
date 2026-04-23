@@ -102,23 +102,50 @@ export async function summary(req: AdminRequest, res: Response, next: NextFuncti
       if (endDate) where.date.lte = new Date(endDate)
     }
 
-    const [incomeAgg, expenseAgg, total, recentRecords, pendingIncomeAgg] = await Promise.all([
+    const [incomeAgg, expenseAgg, total, recentRecords, pendingIncomeAgg, memberShares] = await Promise.all([
       prisma.finance.aggregate({ where: { ...where, type: 'INCOME', received: true }, _sum: { amount: true }, _count: true }),
       prisma.finance.aggregate({ where: { ...where, type: 'EXPENSE' }, _sum: { amount: true }, _count: true }),
       prisma.finance.count({ where }),
       prisma.finance.findMany({ where, take: 10, orderBy: { date: 'desc' } }),
       prisma.finance.aggregate({ where: { ...where, type: 'INCOME', received: false }, _sum: { amount: true }, _count: true }),
+      prisma.projectShare.findMany({
+        include: {
+          employee: { select: { id: true, name: true, isFounder: true, role: true } },
+          projectFinance: { select: { projectRef: true, currency: true, totalAmount: true } },
+        },
+      }),
     ])
 
     const totalIncome = incomeAgg._sum.amount || 0
     const totalExpenses = expenseAgg._sum.amount || 0
     const pendingIncome = pendingIncomeAgg._sum.amount || 0
 
+    // Calculate per-member income breakdown
+    const memberIncomeMap: Record<string, { name: string; isFounder: boolean; role: string; totalShare: number; paidShare: number; pendingShare: number; projects: number }> = {}
+    for (const share of memberShares) {
+      const empId = share.employee.id
+      if (!memberIncomeMap[empId]) {
+        memberIncomeMap[empId] = { name: share.employee.name, isFounder: share.employee.isFounder, role: share.employee.role, totalShare: 0, paidShare: 0, pendingShare: 0, projects: 0 }
+      }
+      memberIncomeMap[empId].totalShare += share.shareAmount
+      memberIncomeMap[empId].projects += 1
+      if (share.paymentStatus === 'PAID') memberIncomeMap[empId].paidShare += share.shareAmount
+      else memberIncomeMap[empId].pendingShare += share.shareAmount
+    }
+    const memberIncome = Object.entries(memberIncomeMap).map(([id, data]) => ({ id, ...data })).sort((a, b) => b.totalShare - a.totalShare)
+
+    // Founder profit = founder's total share from all projects
+    const founderProfit = memberShares
+      .filter(s => s.employee.isFounder)
+      .reduce((sum, s) => sum + s.shareAmount, 0)
+
     sendSuccess(res, {
       totalIncome,
       totalExpenses,
       pendingIncome,
       profit: totalIncome - totalExpenses,
+      founderProfit,
+      memberIncome,
       totalRecords: total,
       incomeCount: incomeAgg._count,
       expenseCount: expenseAgg._count,

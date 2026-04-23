@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, MessageSquare, Mail, Phone, Send, XCircle, Clock, CheckCircle2, ChevronDown, Trash2, RotateCcw } from 'lucide-react'
 import { getInquiries, respondToInquiry, ignoreInquiry, unignoreInquiry, deleteInquiry } from '../../api/adminApi'
@@ -24,7 +25,8 @@ export default function Leads() {
   const [leads, setLeads] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('All')
+  const [searchParams] = useSearchParams()
+  const [statusFilter, setStatusFilter] = useState(() => searchParams.get('filter') === 'pending' ? 'NEW' : 'All')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [respondingId, setRespondingId] = useState<string | null>(null)
   const [responseText, setResponseText] = useState('')
@@ -140,7 +142,7 @@ export default function Leads() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
           { label: 'Total', value: leads.length, color: 'cyan', filter: 'All' },
-          { label: 'Pending', value: newCount, color: 'violet', filter: 'NEW' },
+          { label: 'Pending Inquiries', value: newCount, color: 'violet', filter: 'NEW' },
           { label: 'Responded', value: respondedCount, color: 'emerald', filter: 'RESPONDED' },
           { label: 'Ignored', value: ignoredCount, color: 'slate', filter: 'IGNORED' },
         ].map(s => {

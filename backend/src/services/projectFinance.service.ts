@@ -266,6 +266,20 @@ export async function notifyShareholders(projectRef: string, projectTitle: strin
 
   // Notify admin about team notification
   if (type === 'completion') {
+    // Auto-mark all shares as PAID
+    await prisma.projectShare.updateMany({
+      where: { projectFinanceId: finance.id },
+      data: { paymentStatus: 'PAID' },
+    })
+
+    // Auto-mark the finance invoice as received
+    await prisma.finance.updateMany({
+      where: { projectRef, type: 'INCOME' },
+      data: { received: true },
+    })
+
+    emitDashboardEvent('finance:update', { projectRef, type: 'completion' })
+
     void notifyAdmin(`📊 Project completion notifications sent for: ${projectTitle} (${sharesWithPhone.length} members)`, 'project_completion')
   }
 

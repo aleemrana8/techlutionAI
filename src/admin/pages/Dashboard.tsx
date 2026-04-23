@@ -53,10 +53,10 @@ const fallbackChartData = [
 /* Card → route mapping */
 const cardRoutes: Record<string, string> = {
   'Total Visitors': '/admin/visitors',
-  'Pending': '/admin/inquiries',
+  'Pending Inquiries': '/admin/inquiries?filter=pending',
   'Active Clients': '/admin/inquiries',
   'Active Projects': '/admin/projects',
-  'Proposals': '/admin/proposals',
+  'Pending Proposals': '/admin/proposals?filter=pending',
   'Revenue (USD)': '/admin/finance',
   'Members': '/admin/members',
   'Profit (USD)': '/admin/finance',
@@ -69,7 +69,7 @@ const cardRoutes: Record<string, string> = {
 
 const CARDS = [
   { label: 'Total Visitors', value: 0, icon: Users, color: 'cyan', change: '' },
-  { label: 'Pending', value: 0, icon: MessageSquare, color: 'violet', change: '' },
+  { label: 'Pending Inquiries', value: 0, icon: MessageSquare, color: 'violet', change: '' },
   { label: 'Active Clients', value: 0, icon: UserCheck, color: 'emerald', change: '' },
   { label: 'Active Projects', value: 0, icon: FolderKanban, color: 'orange', change: '' },
   { label: 'Proposals', value: 0, icon: FileSignature, color: 'rose', change: '' },
@@ -125,13 +125,13 @@ export default function Dashboard() {
   const cards = data
     ? [
         { label: 'Total Visitors', value: data.visitors?.total ?? 0, icon: Users, color: 'cyan', change: data.visitors?.today ? `${data.visitors.today} today` : '' },
-        { label: 'Pending', value: data.inquiries?.pending ?? 0, icon: MessageSquare, color: 'violet', change: data.inquiries?.total ? `${data.inquiries.total} total` : '' },
+        { label: 'Pending Inquiries', value: data.inquiries?.pending ?? 0, icon: MessageSquare, color: 'violet', change: data.inquiries?.total ? `${data.inquiries.total} total` : '' },
         { label: 'Active Clients', value: data.clients?.active ?? 0, icon: UserCheck, color: 'emerald', change: '' },
         { label: 'Active Projects', value: data.projects?.active ?? data.projects?.total ?? 0, icon: FolderKanban, color: 'orange', change: data.projects?.total ? `${data.projects.total} total` : '' },
-        { label: 'Proposals', value: data.proposals?.total ?? 0, icon: FileSignature, color: 'rose', change: data.proposals?.new ? `${data.proposals.new} new` : '' },
+        { label: 'Pending Proposals', value: data.proposals?.pending ?? 0, icon: FileSignature, color: 'rose', change: data.proposals?.total ? `${data.proposals.total} total` : '' },
         { label: 'Revenue (USD)', value: data.finance?.totalRevenue ?? 0, icon: DollarSign, color: 'cyan', change: '' },
         { label: 'Members', value: data.employees?.total ?? 0, icon: Briefcase, color: 'violet', change: `${data.employees?.active ?? 0} active` },
-        { label: 'Profit (USD)', value: data.finance?.profit ?? 0, icon: TrendingUp, color: 'emerald', change: '' },
+        { label: 'Profit (USD)', value: data.finance?.founderProfit ?? 0, icon: TrendingUp, color: 'emerald', change: '' },
       ]
     : CARDS
 

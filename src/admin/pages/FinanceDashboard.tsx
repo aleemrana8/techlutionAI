@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DollarSign, TrendingUp, TrendingDown, CreditCard, FileText, ArrowUpRight, ArrowDownRight, X, FolderKanban, Users, Clock } from 'lucide-react'
 import { PieChart, Pie, Cell, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts'
@@ -33,6 +33,9 @@ export default function FinanceDashboard() {
   const [projects, setProjects] = useState<any[]>([])
   const [employees, setEmployees] = useState<any[]>([])
   const [selectedProjectFinance, setSelectedProjectFinance] = useState<any>(null)
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null)
+  const [tableFilter, setTableFilter] = useState<string>('all')
+  const invoiceRef = useRef<HTMLDivElement>(null)
   const [selectedMember, setSelectedMember] = useState<any>(null)
   const [memberAssignments, setMemberAssignments] = useState<any[]>([])
   const [loadingMember, setLoadingMember] = useState(false)
@@ -54,15 +57,23 @@ export default function FinanceDashboard() {
 
   const totalIncome = summary?.totalIncome ?? 0
   const totalExpenses = summary?.totalExpenses ?? 0
-  const profit = summary?.profit ?? 0
+  const founderProfit = summary?.founderProfit ?? 0
   const pendingIncome = summary?.pendingIncome ?? 0
+  const memberIncome = summary?.memberIncome ?? []
 
   const kpis = [
-    { label: 'Received Income', value: `$${totalIncome.toLocaleString()}`, change: '', up: true, icon: DollarSign, color: 'cyan' },
-    { label: 'Pending Income', value: `$${pendingIncome.toLocaleString()}`, change: '', up: false, icon: Clock, color: 'amber' },
-    { label: 'Total Expenses', value: `$${totalExpenses.toLocaleString()}`, change: '', up: true, icon: TrendingDown, color: 'rose' },
-    { label: 'Net Profit', value: `$${profit.toLocaleString()}`, change: '', up: profit >= 0, icon: TrendingUp, color: 'emerald' },
+    { label: 'Received Income', value: `$${totalIncome.toLocaleString()}`, change: '', up: true, icon: DollarSign, color: 'cyan', filter: 'received' },
+    { label: 'Pending Income', value: `$${pendingIncome.toLocaleString()}`, change: '', up: false, icon: Clock, color: 'amber', filter: 'pending' },
+    { label: 'Total Expenses', value: `$${totalExpenses.toLocaleString()}`, change: '', up: true, icon: TrendingDown, color: 'rose', filter: 'expense' },
+    { label: 'Profit', value: `$${founderProfit.toLocaleString()}`, change: '', up: founderProfit >= 0, icon: TrendingUp, color: 'emerald', filter: 'all' },
   ]
+
+  const filteredRecords = records.filter((r: any) => {
+    if (tableFilter === 'received') return r.type === 'INCOME' && r.received
+    if (tableFilter === 'pending') return r.type === 'INCOME' && !r.received
+    if (tableFilter === 'expense') return r.type === 'EXPENSE'
+    return true
+  })
 
   // Group by category for pie chart
   const categoryMap = records.reduce((acc: Record<string, number>, r: any) => {
@@ -98,7 +109,8 @@ export default function FinanceDashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05 }}
             whileHover={{ scale: 1.02, y: -2 }}
-            className="rounded-xl bg-slate-900/60 backdrop-blur-sm border border-white/[0.06] p-5"
+            onClick={() => { setTableFilter(kpi.filter); invoiceRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }}
+            className={`rounded-xl bg-slate-900/60 backdrop-blur-sm border p-5 cursor-pointer transition-all ${tableFilter === kpi.filter ? 'border-white/20 ring-1 ring-white/10' : 'border-white/[0.06]'}`}
           >
             <div className="flex items-center justify-between mb-3">
               <div className={`w-10 h-10 rounded-xl bg-${kpi.color}-500/15 border border-white/[0.06] flex items-center justify-center`}>
@@ -181,14 +193,18 @@ export default function FinanceDashboard() {
 
       {/* Invoice Table */}
       <motion.div
+        ref={invoiceRef}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="rounded-xl bg-slate-900/60 backdrop-blur-sm border border-white/[0.06] overflow-hidden"
+        className="rounded-xl bg-slate-900/60 backdrop-blur-sm border border-white/[0.06] overflow-hidden scroll-mt-4"
       >
-        <div className="p-4 border-b border-white/[0.06] flex items-center gap-2">
-          <FileText size={16} className="text-slate-400" />
-          <h3 className="text-white font-semibold text-sm">Recent Invoices</h3>
+        <div className="p-4 border-b border-white/[0.06] flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <FileText size={16} className="text-slate-400" />
+            <h3 className="text-white font-semibold text-sm">{tableFilter === 'all' ? 'All Invoices' : tableFilter === 'received' ? 'Received Income' : tableFilter === 'pending' ? 'Pending Income' : 'Expenses'}</h3>
+          </div>
+          {tableFilter !== 'all' && <button onClick={() => setTableFilter('all')} className="text-[11px] text-slate-400 hover:text-white transition-colors">Show All</button>}
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -200,13 +216,14 @@ export default function FinanceDashboard() {
               </tr>
             </thead>
             <tbody>
-              {records.slice(0, 10).map((rec: any, i: number) => (
+              {filteredRecords.slice(0, 20).map((rec: any, i: number) => (
                 <motion.tr
                   key={rec.id}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.4 + i * 0.03 }}
-                  className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors"
+                  className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors cursor-pointer"
+                  onClick={() => setSelectedInvoice(rec)}
                 >
                   <td className="px-4 py-3 text-slate-500 text-xs">{rec.id}</td>
                   <td className="px-4 py-3 text-white">{rec.description || '-'}</td>
@@ -218,7 +235,7 @@ export default function FinanceDashboard() {
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <button onClick={async () => { try { await updateFinanceRecord(rec.id, { received: !rec.received }); fetchData() } catch {} }} className="cursor-pointer transition-all hover:scale-105">
+                    <button onClick={async (e) => { e.stopPropagation(); try { await updateFinanceRecord(rec.id, { received: !rec.received }); fetchData() } catch {} }} className="cursor-pointer transition-all hover:scale-105">
                       <span className={`text-xs px-2.5 py-0.5 rounded-full border font-medium ${rec.received === false ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}>
                         {rec.received === false ? 'Pending' : 'Received'}
                       </span>
@@ -266,24 +283,91 @@ export default function FinanceDashboard() {
           <h3 className="text-white font-semibold text-sm">Member Earnings</h3>
         </div>
         <div className="divide-y divide-white/[0.04]">
-          {employees.length === 0 ? <p className="text-sm text-slate-500 text-center py-6">No members</p> : employees.map((m: any) => (
-            <div key={m.id} onClick={async () => {
-              setSelectedMember(m); setLoadingMember(true)
-              try { const { data } = await getEmployeeAssignments(m.id); setMemberAssignments(data?.data || []) } catch { setMemberAssignments([]) }
-              setLoadingMember(false)
-            }} className="flex items-center justify-between px-4 py-3 hover:bg-white/[0.02] cursor-pointer transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500/20 to-violet-500/20 border border-white/10 flex items-center justify-center text-cyan-400 font-bold text-xs">{(m.name || '?')[0]}</div>
-                <div>
-                  <p className="text-sm text-white font-medium">{m.name}{m.isFounder && <span className="ml-1.5 text-[9px] bg-amber-500/10 text-amber-400 px-1.5 py-0.5 rounded-full">Founder</span>}</p>
-                  <p className="text-[10px] text-slate-500">{m.role} &bull; {m.department}</p>
+          {employees.length === 0 ? <p className="text-sm text-slate-500 text-center py-6">No members</p> : employees.map((m: any) => {
+            const income = memberIncome.find((mi: any) => mi.name === m.name && mi.isFounder === m.isFounder)
+            return (
+              <div key={m.id} onClick={async () => {
+                setSelectedMember(m); setLoadingMember(true)
+                try { const { data } = await getEmployeeAssignments(m.id); setMemberAssignments(data?.data || []) } catch { setMemberAssignments([]) }
+                setLoadingMember(false)
+              }} className="flex items-center justify-between px-4 py-3 hover:bg-white/[0.02] cursor-pointer transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500/20 to-violet-500/20 border border-white/10 flex items-center justify-center text-cyan-400 font-bold text-xs">{(m.name || '?')[0]}</div>
+                  <div>
+                    <p className="text-sm text-white font-medium">{m.name}{m.isFounder && <span className="ml-1.5 text-[9px] bg-amber-500/10 text-amber-400 px-1.5 py-0.5 rounded-full">Founder</span>}</p>
+                    <p className="text-[10px] text-slate-500">{m.role} &bull; {m.department}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  {income ? (
+                    <>
+                      <p className={`text-sm font-bold ${income.totalShare >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>${income.totalShare.toLocaleString()}</p>
+                      <div className="flex items-center gap-2 justify-end">
+                        {income.paidShare > 0 && <span className="text-[10px] text-emerald-400">${income.paidShare.toLocaleString()} paid</span>}
+                        {income.pendingShare > 0 && <span className="text-[10px] text-amber-400">${income.pendingShare.toLocaleString()} pending</span>}
+                      </div>
+                    </>
+                  ) : (
+                    <span className="text-xs text-slate-500">No earnings</span>
+                  )}
                 </div>
               </div>
-              <span className="text-xs text-slate-400">{m.status}</span>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </motion.div>
+
+      {/* Invoice Detail Modal */}
+      <AnimatePresence>
+        {selectedInvoice && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setSelectedInvoice(null)}>
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} onClick={e => e.stopPropagation()} className="bg-slate-900 border border-white/[0.06] rounded-2xl w-full max-w-md max-h-[80vh] overflow-y-auto p-6">
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2"><FileText size={18} className="text-cyan-400" />Invoice Details</h2>
+                <button onClick={() => setSelectedInvoice(null)} className="text-slate-500 hover:text-white"><X size={18} /></button>
+              </div>
+              <div className="space-y-4">
+                {/* Amount & Status */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-slate-800/50 border border-white/[0.06] rounded-xl p-3 text-center">
+                    <p className="text-[10px] text-slate-500 uppercase">Amount</p>
+                    <p className={`text-xl font-bold mt-1 ${selectedInvoice.type === 'INCOME' ? 'text-emerald-400' : 'text-rose-400'}`}>${Number(selectedInvoice.amount || 0).toLocaleString()}</p>
+                  </div>
+                  <div className="bg-slate-800/50 border border-white/[0.06] rounded-xl p-3 text-center">
+                    <p className="text-[10px] text-slate-500 uppercase">Status</p>
+                    <p className={`text-xl font-bold mt-1 ${selectedInvoice.received ? 'text-emerald-400' : 'text-amber-400'}`}>{selectedInvoice.received ? 'Received' : 'Pending'}</p>
+                  </div>
+                </div>
+                {/* Details */}
+                <div className="bg-slate-800/30 border border-white/[0.06] rounded-xl p-4 space-y-3">
+                  {[
+                    { label: 'ID', value: selectedInvoice.id },
+                    { label: 'Description', value: selectedInvoice.description || '-' },
+                    { label: 'Type', value: selectedInvoice.type },
+                    { label: 'Category', value: selectedInvoice.category || '-' },
+                    { label: 'Date', value: selectedInvoice.date ? new Date(selectedInvoice.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : '-' },
+                    { label: 'Created', value: selectedInvoice.createdAt ? new Date(selectedInvoice.createdAt).toLocaleString() : '-' },
+                    ...(selectedInvoice.projectRef ? [{ label: 'Project Ref', value: selectedInvoice.projectRef }] : []),
+                    ...(selectedInvoice.notes ? [{ label: 'Notes', value: selectedInvoice.notes }] : []),
+                  ].map(item => (
+                    <div key={item.label} className="flex justify-between items-start">
+                      <span className="text-xs text-slate-500 uppercase">{item.label}</span>
+                      <span className="text-sm text-white text-right max-w-[60%] break-words">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+                {/* Toggle Status Button */}
+                <button
+                  onClick={async () => { try { await updateFinanceRecord(selectedInvoice.id, { received: !selectedInvoice.received }); setSelectedInvoice({ ...selectedInvoice, received: !selectedInvoice.received }); fetchData() } catch {} }}
+                  className={`w-full py-2.5 rounded-xl text-sm font-medium transition-all ${selectedInvoice.received ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20'}`}
+                >
+                  {selectedInvoice.received ? 'Mark as Pending' : 'Mark as Received'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Project Finance Detail Modal */}
       <AnimatePresence>
@@ -361,15 +445,16 @@ export default function FinanceDashboard() {
               {loadingMember ? <div className="text-center py-8"><div className="w-6 h-6 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin mx-auto" /></div> : (
                 <div className="space-y-4">
                   {(() => {
-                    const withShare = memberAssignments.filter((a: any) => a.shareAmount)
-                    const totalEarnings = withShare.reduce((s: number, a: any) => s + (a.shareAmount || 0), 0)
-                    const paid = withShare.filter((a: any) => a.paymentStatus === 'PAID').reduce((s: number, a: any) => s + (a.shareAmount || 0), 0)
+                    const withShare = memberAssignments.filter((a: any) => a.share)
+                    const totalEarnings = withShare.reduce((s: number, a: any) => s + (a.share?.shareAmount || 0), 0)
+                    const paid = withShare.filter((a: any) => a.share?.paymentStatus === 'PAID').reduce((s: number, a: any) => s + (a.share?.shareAmount || 0), 0)
+                    const pending = totalEarnings - paid
                     return (
                       <>
                         <div className="grid grid-cols-3 gap-3">
-                          <div className="bg-slate-800/50 border border-white/[0.06] rounded-xl p-3 text-center"><p className="text-[10px] text-slate-500 uppercase">Total</p><p className="text-lg font-bold text-emerald-400 mt-1">${totalEarnings.toLocaleString()}</p></div>
-                          <div className="bg-slate-800/50 border border-white/[0.06] rounded-xl p-3 text-center"><p className="text-[10px] text-slate-500 uppercase">Paid</p><p className="text-lg font-bold text-cyan-400 mt-1">${paid.toLocaleString()}</p></div>
-                          <div className="bg-slate-800/50 border border-white/[0.06] rounded-xl p-3 text-center"><p className="text-[10px] text-slate-500 uppercase">Pending</p><p className="text-lg font-bold text-amber-400 mt-1">${(totalEarnings - paid).toLocaleString()}</p></div>
+                          <div className="bg-slate-800/50 border border-white/[0.06] rounded-xl p-3 text-center"><p className="text-[10px] text-slate-500 uppercase">Total</p><p className={`text-lg font-bold mt-1 ${totalEarnings >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>${totalEarnings.toLocaleString()}</p></div>
+                          <div className="bg-slate-800/50 border border-white/[0.06] rounded-xl p-3 text-center"><p className="text-[10px] text-slate-500 uppercase">Paid</p><p className={`text-lg font-bold mt-1 ${paid >= 0 ? 'text-cyan-400' : 'text-rose-400'}`}>${paid.toLocaleString()}</p></div>
+                          <div className="bg-slate-800/50 border border-white/[0.06] rounded-xl p-3 text-center"><p className="text-[10px] text-slate-500 uppercase">Pending</p><p className={`text-lg font-bold mt-1 ${pending >= 0 ? 'text-amber-400' : 'text-rose-400'}`}>${pending.toLocaleString()}</p></div>
                         </div>
                         <p className="text-xs text-slate-500 font-medium uppercase">Projects ({memberAssignments.length})</p>
                         {memberAssignments.length === 0 ? <p className="text-sm text-slate-500 text-center py-4">No assignments</p> : memberAssignments.map((a: any) => (
@@ -381,12 +466,16 @@ export default function FinanceDashboard() {
                                 {(() => { const dl = getDeadlineInfo(a.project?.deadline); return dl ? <span className={`text-[10px] px-1.5 py-0.5 rounded-full border font-medium ${dl.color}`}>{dl.label}</span> : null })()}
                               </div>
                             </div>
-                            {a.shareAmount != null && (
-                              <div className="text-right">
-                                <p className="text-sm font-bold text-emerald-400">${a.shareAmount?.toLocaleString()}</p>
-                                <span className={`text-[10px] ${a.paymentStatus === 'PAID' ? 'text-emerald-400' : 'text-amber-400'}`}>{a.paymentStatus || 'PENDING'}</span>
-                              </div>
-                            )}
+                            <div className="text-right">
+                              {a.share ? (
+                                <>
+                                  <p className={`text-sm font-bold ${a.share.shareAmount >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>${a.share.shareAmount?.toLocaleString()}</p>
+                                  <span className={`text-[10px] ${a.share.paymentStatus === 'PAID' ? 'text-emerald-400' : 'text-amber-400'}`}>{a.share.paymentStatus || 'PENDING'}</span>
+                                </>
+                              ) : (
+                                <span className="text-[10px] text-slate-500">No share</span>
+                              )}
+                            </div>
                           </div>
                         ))}
                       </>

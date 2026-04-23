@@ -233,44 +233,52 @@ export async function dashboardSummary(req: AdminRequest, res: Response, next: N
 
     const [
       totalVisitors, todayVisitors,
-      totalLeads, newLeads, convertedLeads,
+      pendingInquiries, respondedInquiries, ignoredInquiries, totalInquiries,
       totalClients, activeClients,
       totalEmployees, activeEmployees,
-      totalProjects,
-      income, expenses,
+      totalProjects, activeProjects,
+      totalProposals, pendingProposals,
+      receivedIncomeAgg, expenseAgg,
       recentLeads, recentVisitors,
       pendingTasks,
+      founderShares,
     ] = await Promise.all([
       prisma.visitor.count(),
       prisma.visitor.count({ where: { createdAt: { gte: startOfDay } } }),
-      prisma.lead.count(),
-      prisma.lead.count({ where: { status: 'NEW' } }),
-      prisma.lead.count({ where: { status: 'CLOSED' } }),
+      prisma.lead.count({ where: { type: 'INQUIRY', status: 'NEW' } }),
+      prisma.lead.count({ where: { type: 'INQUIRY', status: 'RESPONDED' } }),
+      prisma.lead.count({ where: { type: 'INQUIRY', status: 'IGNORED' } }),
+      prisma.lead.count({ where: { type: 'INQUIRY' } }),
       prisma.client.count(),
       prisma.client.count({ where: { status: 'ACTIVE' } }),
       prisma.employee.count(),
       prisma.employee.count({ where: { status: 'ACTIVE' } }),
       prisma.project.count(),
-      prisma.finance.aggregate({ where: { type: 'INCOME', date: { gte: startOfMonth } }, _sum: { amount: true } }),
-      prisma.finance.aggregate({ where: { type: 'EXPENSE', date: { gte: startOfMonth } }, _sum: { amount: true } }),
-      prisma.lead.findMany({ orderBy: { createdAt: 'desc' }, take: 5 }),
+      prisma.project.count({ where: { status: 'ACTIVE' } }),
+      prisma.lead.count({ where: { type: 'PROPOSAL' } }),
+      prisma.lead.count({ where: { type: 'PROPOSAL', status: 'NEW' } }),
+      prisma.finance.aggregate({ where: { type: 'INCOME', received: true }, _sum: { amount: true } }),
+      prisma.finance.aggregate({ where: { type: 'EXPENSE' }, _sum: { amount: true } }),
+      prisma.lead.findMany({ where: { type: 'INQUIRY', status: 'NEW' }, orderBy: { createdAt: 'desc' }, take: 5 }),
       prisma.visitor.findMany({ orderBy: { createdAt: 'desc' }, take: 5 }),
       prisma.employee.count({ where: { workload: { gt: 66 } } }),
+      prisma.projectShare.findMany({ where: { employee: { isFounder: true } }, select: { shareAmount: true } }),
     ])
 
-    const totalIncome = income._sum.amount ?? 0
-    const totalExpenses = expenses._sum.amount ?? 0
-    const conversionRate = totalLeads > 0 ? Math.round((convertedLeads / totalLeads) * 100) : 0
+    const totalRevenue = receivedIncomeAgg._sum.amount ?? 0
+    const totalExpenses = expenseAgg._sum.amount ?? 0
+    const profit = totalRevenue - totalExpenses
+    const founderProfit = founderShares.reduce((sum: number, s: any) => sum + s.shareAmount, 0)
 
     sendSuccess(res, {
       visitors: { total: totalVisitors, today: todayVisitors },
-      inquiries: { total: totalLeads, new: newLeads, converted: convertedLeads, conversionRate },
+      inquiries: { total: totalInquiries, pending: pendingInquiries, responded: respondedInquiries, ignored: ignoredInquiries },
       clients: { total: totalClients, active: activeClients },
       employees: { total: totalEmployees, active: activeEmployees },
-      projects: { total: totalProjects },
-      finance: { income: totalIncome, expenses: totalExpenses, profit: totalIncome - totalExpenses },
+      projects: { total: totalProjects, active: activeProjects },
+      proposals: { total: totalProposals, pending: pendingProposals },
+      finance: { totalRevenue, totalExpenses, profit, founderProfit },
       pendingTasks,
-      conversionRate,
       recentInquiries: recentLeads,
       recentVisitors,
     })

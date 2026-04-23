@@ -363,6 +363,7 @@ function ProjectDetailModal({ project, onClose, onUpdate }: { project: Project; 
   const [tab, setTab] = useState<'info' | 'tasks' | 'team'>('info')
   const [tasks, setTasks] = useState<any[]>([])
   const [loadingTasks, setLoadingTasks] = useState(true)
+  const [finance, setFinance] = useState<any>(null)
   const [showTaskForm, setShowTaskForm] = useState(false)
   const [taskForm, setTaskForm] = useState({ title: '', description: '', priority: 'MEDIUM', assigneeId: '', dueDate: '' })
   const [saving, setSaving] = useState(false)
@@ -380,7 +381,11 @@ function ProjectDetailModal({ project, onClose, onUpdate }: { project: Project; 
   const members = project.assignments || []
   const assignedIds = members.map(a => a.employee.id)
 
-  useEffect(() => { loadTasks() }, [project.id])
+  useEffect(() => { loadTasks(); loadFinance() }, [project.id])
+
+  async function loadFinance() {
+    try { const res = await getProjectFinance(project.id); setFinance(res?.data?.data || null) } catch { /* */ }
+  }
 
   const loadAvailableEmps = async () => {
     setLoadingEmps(true)
@@ -502,6 +507,48 @@ function ProjectDetailModal({ project, onClose, onUpdate }: { project: Project; 
                 {project.deadline && <div className="bg-slate-800/30 rounded-xl p-3"><span className="text-slate-500">Deadline:</span> <span className="text-white">{new Date(project.deadline).toLocaleDateString()}</span></div>}
                 {(() => { const dl = getDeadlineInfo(project.deadline); return dl ? <div className={`rounded-xl p-3 border ${dl.color}`}><span className="text-slate-500">Time Left:</span> <span className="font-semibold"> {dl.label}</span></div> : null })()}
               </div>
+
+              {/* Budget & Shares */}
+              {finance && (
+                <div className="space-y-3">
+                  <p className="text-xs text-slate-500 font-medium uppercase">Budget & Compensation</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                    <div className="bg-slate-800/30 rounded-xl p-3 text-center">
+                      <p className="text-[10px] text-slate-500 uppercase">Total Budget</p>
+                      <p className="text-lg font-bold text-white mt-1">${finance.totalAmount?.toLocaleString()}</p>
+                    </div>
+                    <div className="bg-slate-800/30 rounded-xl p-3 text-center">
+                      <p className="text-[10px] text-slate-500 uppercase">Net Amount</p>
+                      <p className={`text-lg font-bold mt-1 ${finance.netAmount >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>${finance.netAmount?.toLocaleString()}</p>
+                    </div>
+                    <div className="bg-slate-800/30 rounded-xl p-3 text-center">
+                      <p className="text-[10px] text-slate-500 uppercase">Deductions</p>
+                      <p className="text-lg font-bold text-amber-400 mt-1">${finance.totalDeductions?.toLocaleString()}</p>
+                    </div>
+                    <div className="bg-slate-800/30 rounded-xl p-3 text-center">
+                      <p className="text-[10px] text-slate-500 uppercase">Per Person</p>
+                      <p className={`text-lg font-bold mt-1 ${finance.sharePerPerson >= 0 ? 'text-cyan-400' : 'text-rose-400'}`}>${finance.sharePerPerson?.toLocaleString()}</p>
+                    </div>
+                  </div>
+                  {finance.shares?.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-xs text-slate-500 font-medium uppercase">Individual Shares ({finance.totalMembers} members)</p>
+                      {finance.shares.map((s: any) => (
+                        <div key={s.id} className="flex items-center justify-between bg-slate-800/30 border border-white/[0.06] rounded-xl px-4 py-2.5">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-white font-medium">{s.employee?.name || 'Unknown'}</span>
+                            {s.employee?.isFounder && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">Founder</span>}
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className={`text-sm font-bold ${s.shareAmount >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>${s.shareAmount?.toLocaleString()}</span>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full border ${s.paymentStatus === 'PAID' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>{s.paymentStatus || 'PENDING'}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -874,7 +921,7 @@ export default function ProjectsBoard() {
                       <Users size={11} /> Members
                     </button>
                     <button onClick={(e) => { e.stopPropagation(); setSelectedProject(project) }} className="flex items-center gap-1 text-[11px] text-cyan-400 hover:text-cyan-300 px-2 py-1 rounded-lg hover:bg-cyan-500/10 transition-all">
-                      <DollarSign size={11} /> Shares
+                      <DollarSign size={11} /> Completion
                     </button>
                     <button onClick={(e) => { e.stopPropagation(); setConfirmAction({ type: 'delete', id: project.id, title: project.title }) }} className="p-1.5 text-slate-600 hover:text-red-400 transition-colors"><Trash2 size={13} /></button>
                   </div>

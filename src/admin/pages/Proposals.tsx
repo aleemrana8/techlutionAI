@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FileText, Plus, Search, X, Check, XCircle, Clock, DollarSign, TrendingUp, BarChart3, Trash2, Rocket, Users, UserPlus, Percent, Calculator, Mail, EyeOff, Send, ChevronDown, Phone, Inbox, FileSignature, RotateCcw } from 'lucide-react'
 import { getProposals, createProposal, updateProposalStatus, deleteProposal, getProposalStats, getClients, getEmployees, startProjectFromProposal, getInquiries, respondToInquiry, ignoreInquiry, unignoreInquiry, deleteInquiry, startProjectFromInquiry } from '../../api/adminApi'
@@ -50,7 +51,8 @@ export default function Proposals() {
   const [incomingLeads, setIncomingLeads] = useState<any[]>([])
   const [incomingLoading, setIncomingLoading] = useState(true)
   const [incomingSearch, setIncomingSearch] = useState('')
-  const [incomingStatusFilter, setIncomingStatusFilter] = useState('All')
+  const [searchParams] = useSearchParams()
+  const [incomingStatusFilter, setIncomingStatusFilter] = useState(() => searchParams.get('filter') === 'pending' ? 'NEW' : 'All')
   const [expandedLeadId, setExpandedLeadId] = useState<string | null>(null)
   const [respondingLeadId, setRespondingLeadId] = useState<string | null>(null)
   const [leadResponseText, setLeadResponseText] = useState('')
@@ -141,6 +143,7 @@ export default function Proposals() {
   const incomingNewCount = incomingLeads.filter(l => !l.status || l.status === 'NEW').length
   const incomingRespondedCount = incomingLeads.filter(l => l.status === 'RESPONDED').length
   const incomingIgnoredCount = incomingLeads.filter(l => l.status === 'IGNORED').length
+  const incomingQualifiedCount = incomingLeads.filter(l => l.status === 'QUALIFIED').length
   const incomingFilterOptions = ['All', ...new Set(incomingLeads.map(l => l.status || 'NEW'))]
 
   const statusConfig: Record<string, { icon: any; color: string; bg: string; border: string }> = {
@@ -167,7 +170,7 @@ export default function Proposals() {
       <div className="flex gap-2 p-1 bg-slate-900/50 border border-white/[0.06] rounded-xl w-fit">
         <button onClick={() => setActiveView('incoming')} className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeView === 'incoming' ? 'bg-gradient-to-r from-orange-500/20 to-rose-500/20 text-orange-400 border border-orange-500/20' : 'text-slate-500 hover:text-slate-300'}`}>
           <Inbox size={14} /> Incoming Requests
-          {incomingNewCount > 0 && <span className="bg-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded-full text-[10px] font-bold">{incomingNewCount}</span>}
+          {incomingNewCount > 0 && <span className="bg-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded-full text-[10px] font-bold">{incomingNewCount} pending</span>}
         </button>
         <button onClick={() => setActiveView('proposals')} className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeView === 'proposals' ? 'bg-gradient-to-r from-cyan-500/20 to-violet-500/20 text-cyan-400 border border-cyan-500/20' : 'text-slate-500 hover:text-slate-300'}`}>
           <FileSignature size={14} /> Client Proposals
@@ -181,14 +184,17 @@ export default function Proposals() {
       {activeView === 'incoming' && (
         <>
           {/* Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             {[
-              { label: 'Total', value: incomingLeads.length, color: 'orange' },
-              { label: 'New', value: incomingNewCount, color: 'cyan' },
-              { label: 'Responded', value: incomingRespondedCount, color: 'emerald' },
-              { label: 'Ignored', value: incomingIgnoredCount, color: 'slate' },
+              { label: 'Total', value: incomingLeads.length, color: 'orange', filter: 'All' },
+              { label: 'Pending Proposal', value: incomingNewCount, color: 'cyan', filter: 'NEW' },
+              { label: 'Responded', value: incomingRespondedCount, color: 'emerald', filter: 'RESPONDED' },
+              { label: 'Qualified', value: incomingQualifiedCount, color: 'violet', filter: 'QUALIFIED' },
+              { label: 'Ignored', value: incomingIgnoredCount, color: 'slate', filter: 'IGNORED' },
             ].map(s => (
-              <motion.div key={s.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-slate-900/50 border border-white/[0.06] rounded-2xl p-4">
+              <motion.div key={s.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                onClick={() => setIncomingStatusFilter(s.filter)}
+                className={`bg-slate-900/50 border rounded-2xl p-4 cursor-pointer transition-all hover:scale-[1.02] ${incomingStatusFilter === s.filter ? 'border-white/20 ring-1 ring-white/10' : 'border-white/[0.06]'}`}>
                 <p className="text-xs text-slate-500 mb-1">{s.label}</p>
                 <p className={`text-2xl font-bold text-${s.color}-400`}>{s.value}</p>
               </motion.div>
@@ -201,13 +207,7 @@ export default function Proposals() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
               <input value={incomingSearch} onChange={e => setIncomingSearch(e.target.value)} placeholder="Search project requests..." className="w-full pl-10 pr-4 py-2.5 bg-slate-900/50 border border-white/[0.06] rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-orange-500/30" />
             </div>
-            <div className="flex flex-wrap gap-2">
-              {incomingFilterOptions.map(s => (
-                <button key={s} onClick={() => setIncomingStatusFilter(s)} className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${incomingStatusFilter === s ? 'bg-orange-500/15 text-orange-400 border-orange-500/30' : 'bg-white/[0.03] text-slate-400 border-white/[0.06] hover:bg-white/[0.06]'}`}>
-                  {s}
-                </button>
-              ))}
-            </div>
+
           </div>
 
           {/* Incoming List */}
